@@ -273,7 +273,7 @@ export default function SetupWizard({ onComplete, onSkip }) {
   const activeStepDetails = currentStep > 0 && currentStep <= steps.length ? steps[currentStep - 1] : null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#0f172a] text-slate-100 overflow-y-auto font-sans selection:bg-blue-600/30">
+    <div className="fixed inset-0 z-50 bg-[#0f172a] text-slate-100 overflow-y-auto font-sans selection:bg-blue-600/30 setup-wizard-dark">
       {/* Background visual accents */}
       <div className="absolute top-0 left-0 right-0 h-[500px] bg-gradient-to-b from-blue-900/20 via-emerald-950/10 to-transparent pointer-events-none" />
       <div className="absolute -top-[20%] -left-[10%] w-[600px] h-[600px] rounded-full bg-blue-600/5 blur-[120px] pointer-events-none" />

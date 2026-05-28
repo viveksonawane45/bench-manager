@@ -19,7 +19,7 @@ export default {
         danger: "#ef4444",
       },
       fontFamily: {
-        sans: ['Inter', 'Outfit', 'sans-serif'],
+        sans: ['Poppins', 'sans-serif'],
       },
       boxShadow: {
         premium: '0 4px 30px rgba(0, 0, 0, 0.2)',
