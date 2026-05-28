@@ -9,6 +9,7 @@ import AppManager from "./pages/AppManager";
 import ProcessManager from "./pages/ProcessManager";
 import SystemMonitor from "./pages/SystemMonitor";
 import TerminalDrawer from "./components/TerminalDrawer";
+import SetupWizard from "./pages/SetupWizard";
 import { ServerCrash, Loader2 } from "lucide-react";
 
 export default function App() {
@@ -19,6 +20,8 @@ export default function App() {
   const [benches, setBenches] = useState([]);
   const [activeTaskId, setActiveTaskId] = useState(null);
   const [theme, setTheme] = useState(localStorage.getItem("theme") || "light");
+  const [showSetupWizard, setShowSetupWizard] = useState(false);
+  const [initialBenchesLoaded, setInitialBenchesLoaded] = useState(false);
 
   // Sync theme class with HTML document root
   useEffect(() => {
@@ -81,8 +84,12 @@ export default function App() {
         if (Array.isArray(data)) {
           setBenches(data);
         }
+        setInitialBenchesLoaded(true);
       })
-      .catch((err) => console.error("Error fetching benches:", err));
+      .catch((err) => {
+        console.error("Error fetching benches:", err);
+        setInitialBenchesLoaded(true);
+      });
   };
 
   useEffect(() => {
@@ -90,6 +97,38 @@ export default function App() {
     const interval = setInterval(fetchBenches, 5000);
     return () => clearInterval(interval);
   }, [isBackendOnline]);
+
+  // Auto-redirect to setup wizard if conditions met
+  useEffect(() => {
+    if (!isBackendOnline || !initialBenchesLoaded) return;
+
+    const checkSetupRequired = async () => {
+      const skipped = localStorage.getItem("setup_skipped") === "true";
+      const completed = localStorage.getItem("setup_completed") === "true";
+      
+      if (skipped || completed) {
+        setShowSetupWizard(false);
+        return;
+      }
+
+      try {
+        const depRes = await fetch(`${API_HOST}/api/system/check`);
+        if (depRes.ok) {
+          const deps = await depRes.json();
+          const missingDeps = Object.values(deps).some(d => !d.installed);
+          
+          if (benches.length === 0 || missingDeps) {
+            setShowSetupWizard(true);
+          }
+        }
+      } catch (err) {
+        console.error("Error checking setup requirement:", err);
+      }
+    };
+
+    checkSetupRequired();
+  }, [isBackendOnline, initialBenchesLoaded, benches]);
+
 
   // Function to execute an API and handle the task stream
   const handleRunTask = (apiPromise) => {
@@ -165,7 +204,24 @@ export default function App() {
     }
   };
 
+  if (showSetupWizard) {
+    return (
+      <SetupWizard 
+        onComplete={() => {
+          localStorage.setItem("setup_completed", "true");
+          setShowSetupWizard(false);
+          fetchBenches();
+        }}
+        onSkip={() => {
+          localStorage.setItem("setup_skipped", "true");
+          setShowSetupWizard(false);
+        }}
+      />
+    );
+  }
+
   if (loading) {
+
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-darkBg text-white gap-4 font-sans">
         <Loader2 className="w-8 h-8 text-darkAccent animate-spin" />
