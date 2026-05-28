@@ -355,32 +355,6 @@ html:not(.dark) .terminal-dark .text-darkTextMuted {
   color: #94a3b8 !important;
 }
 
-/* Ensure setup wizard text colors are readable/visible in light mode */
-html:not(.dark) .setup-wizard-dark .text-white,
-html:not(.dark) .setup-wizard-dark h1,
-html:not(.dark) .setup-wizard-dark h2,
-html:not(.dark) .setup-wizard-dark h3 {
-  color: #ffffff !important;
-}
-html:not(.dark) .setup-wizard-dark .text-slate-100 {
-  color: #f1f5f9 !important;
-}
-html:not(.dark) .setup-wizard-dark .text-slate-200 {
-  color: #e2e8f0 !important;
-}
-html:not(.dark) .setup-wizard-dark .text-slate-300 {
-  color: #cbd5e1 !important;
-}
-html:not(.dark) .setup-wizard-dark .text-slate-450,
-html:not(.dark) .setup-wizard-dark .text-slate-400 {
-  color: #94a3b8 !important;
-}
-html:not(.dark) .setup-wizard-dark .text-slate-500 {
-  color: #64748b !important;
-}
-html:not(.dark) .setup-wizard-dark p {
-  color: #94a3b8 !important;
-}
 
 
 

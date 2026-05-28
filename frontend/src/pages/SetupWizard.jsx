@@ -266,18 +266,17 @@ export default function SetupWizard({ onComplete, onSkip }) {
     }
   ];
 
-  // Helper percentage calculations
   const totalWizardSteps = steps.length;
   const progressPercent = Math.round((currentStep / (totalWizardSteps + 1)) * 100);
-
   const activeStepDetails = currentStep > 0 && currentStep <= steps.length ? steps[currentStep - 1] : null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#0f172a] text-slate-100 overflow-y-auto font-sans selection:bg-blue-600/30 setup-wizard-dark">
+    <div className="fixed inset-0 z-50 bg-[#f3f4f6] dark:bg-[#0f172a] text-slate-800 dark:text-slate-100 overflow-y-auto font-sans selection:bg-blue-600/30">
+      
       {/* Background visual accents */}
-      <div className="absolute top-0 left-0 right-0 h-[500px] bg-gradient-to-b from-blue-900/20 via-emerald-950/10 to-transparent pointer-events-none" />
-      <div className="absolute -top-[20%] -left-[10%] w-[600px] h-[600px] rounded-full bg-blue-600/5 blur-[120px] pointer-events-none" />
-      <div className="absolute top-[40%] right-[5%] w-[500px] h-[500px] rounded-full bg-emerald-500/5 blur-[100px] pointer-events-none" />
+      <div className="absolute top-0 left-0 right-0 h-[500px] bg-gradient-to-b from-blue-100/30 dark:from-blue-900/20 via-transparent to-transparent pointer-events-none" />
+      <div className="absolute -top-[20%] -left-[10%] w-[600px] h-[600px] rounded-full bg-blue-500/5 dark:bg-blue-600/5 blur-[120px] pointer-events-none" />
+      <div className="absolute top-[40%] right-[5%] w-[500px] h-[500px] rounded-full bg-emerald-500/5 dark:bg-emerald-500/5 blur-[100px] pointer-events-none" />
 
       {/* Main Container */}
       <div className="relative max-w-5xl mx-auto px-6 py-12 flex flex-col min-h-screen">
@@ -289,7 +288,7 @@ export default function SetupWizard({ onComplete, onSkip }) {
               <Rocket className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h2 className="text-sm font-bold tracking-wide uppercase bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">
+              <h2 className="text-sm font-bold tracking-wide uppercase bg-gradient-to-r from-blue-600 to-emerald-500 dark:from-blue-400 dark:to-emerald-400 bg-clip-text text-transparent">
                 Antigravity Setup Wizard
               </h2>
             </div>
@@ -297,14 +296,14 @@ export default function SetupWizard({ onComplete, onSkip }) {
 
           <button 
             onClick={onSkip}
-            className="text-xs font-semibold px-4 py-2 rounded-xl bg-slate-800/40 hover:bg-slate-800 border border-slate-700/50 hover:border-slate-600 text-slate-400 hover:text-white transition-all cursor-pointer"
+            className="text-xs font-semibold px-4 py-2 rounded-xl bg-white dark:bg-slate-800/40 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700/50 text-slate-500 dark:text-slate-400 hover:text-slate-850 dark:hover:text-white transition-all cursor-pointer"
           >
             Skip Onboarding
           </button>
         </div>
 
         {/* Global Progress Tracker */}
-        <div className="mb-10 w-full bg-slate-800/40 rounded-full h-2 p-[2px] border border-slate-700/20 shadow-inner">
+        <div className="mb-10 w-full bg-slate-200 dark:bg-slate-800/40 rounded-full h-2 p-[2px] border border-slate-300/30 dark:border-slate-700/20 shadow-inner">
           <div 
             className="bg-gradient-to-r from-blue-500 via-teal-400 to-emerald-400 h-full rounded-full transition-all duration-500 shadow-md shadow-blue-500/25"
             style={{ width: `${progressPercent}%` }}
@@ -316,32 +315,31 @@ export default function SetupWizard({ onComplete, onSkip }) {
           <div className="flex-1 flex flex-col justify-center items-center py-10 text-center">
             
             {/* Visual server illustration */}
-            <div className="relative mb-8 p-6 rounded-3xl bg-slate-900/60 border border-slate-800 shadow-2xl flex items-center justify-center w-28 h-28 glass-panel">
-              <div className="absolute inset-0 rounded-3xl bg-gradient-to-tr from-blue-600/10 to-emerald-500/10 animate-pulse" />
-              <Server className="w-14 h-14 text-blue-500 drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]" />
-              <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 border-4 border-[#0f172a] animate-bounce" />
+            <div className="relative mb-8 p-6 rounded-3xl bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 shadow-lg dark:shadow-2xl flex items-center justify-center w-28 h-28">
+              <Server className="w-14 h-14 text-blue-600 dark:text-blue-500" />
+              <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 border-4 border-[#f3f4f6] dark:border-[#0f172a] animate-bounce" />
             </div>
 
-            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-4 text-white">
+            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-4 text-slate-900 dark:text-white">
               Create Your First Frappe Bench
             </h1>
-            <p className="text-slate-400 max-w-xl text-base md:text-lg mb-8 leading-relaxed">
+            <p className="text-slate-650 dark:text-slate-400 max-w-xl text-base md:text-lg mb-8 leading-relaxed">
               Let's prepare your system and install everything required for ERPNext development. We'll verify your WSL dependencies and help create your first workspace.
             </p>
 
             {/* Micro stats banner */}
             <div className="grid grid-cols-2 md:grid-cols-3 gap-6 max-w-2xl w-full mb-10">
-              <div className="p-4 rounded-2xl bg-slate-900/40 border border-slate-800/80 glass-card">
-                <p className="text-[10px] uppercase font-bold tracking-wider text-slate-500">Estimated Setup</p>
-                <p className="text-lg font-bold text-slate-200 mt-1">15-20 Mins</p>
+              <div className="p-4 rounded-2xl bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800/80 shadow-sm dark:shadow-md">
+                <p className="text-[10px] uppercase font-bold tracking-wider text-slate-400 dark:text-slate-500">Estimated Setup</p>
+                <p className="text-lg font-bold text-slate-800 dark:text-slate-200 mt-1">15-20 Mins</p>
               </div>
-              <div className="p-4 rounded-2xl bg-slate-900/40 border border-slate-800/80 glass-card">
-                <p className="text-[10px] uppercase font-bold tracking-wider text-slate-500">Compatibility</p>
-                <p className="text-lg font-bold text-blue-400 mt-1">WSL2 + Ubuntu</p>
+              <div className="p-4 rounded-2xl bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800/80 shadow-sm dark:shadow-md">
+                <p className="text-[10px] uppercase font-bold tracking-wider text-slate-400 dark:text-slate-500">Compatibility</p>
+                <p className="text-lg font-bold text-blue-600 dark:text-blue-400 mt-1">WSL2 + Ubuntu</p>
               </div>
-              <div className="p-4 rounded-2xl bg-slate-900/40 border border-slate-800/80 glass-card col-span-2 md:col-span-1">
-                <p className="text-[10px] uppercase font-bold tracking-wider text-slate-500">System Status</p>
-                <p className="text-lg font-bold text-emerald-400 mt-1">Online</p>
+              <div className="p-4 rounded-2xl bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800/80 shadow-sm dark:shadow-md col-span-2 md:col-span-1">
+                <p className="text-[10px] uppercase font-bold tracking-wider text-slate-400 dark:text-slate-500">System Status</p>
+                <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400 mt-1">Online</p>
               </div>
             </div>
 
@@ -360,15 +358,15 @@ export default function SetupWizard({ onComplete, onSkip }) {
         {/* Step 1: System Check Page */}
         {currentStep === 1 && (
           <div className="flex-1 flex flex-col gap-6">
-            <div className="border-b border-slate-800 pb-4 mb-2">
-              <h1 className="text-2xl md:text-3xl font-extrabold text-white">System Dependency Scan</h1>
-              <p className="text-slate-400 text-xs mt-1">We checked the installed components inside your WSL2 virtual environment.</p>
+            <div className="border-b border-slate-200 dark:border-slate-800 pb-4 mb-2">
+              <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white">System Dependency Scan</h1>
+              <p className="text-slate-500 dark:text-slate-400 text-xs mt-1">We checked the installed components inside your WSL2 virtual environment.</p>
             </div>
 
             {loadingChecks ? (
               <div className="flex-1 flex flex-col items-center justify-center py-20 gap-3">
                 <RefreshCw className="w-8 h-8 text-blue-500 animate-spin" />
-                <p className="text-xs text-slate-400">Scanning environment variables & packages...</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Scanning environment variables & packages...</p>
               </div>
             ) : (
               <>
@@ -377,16 +375,16 @@ export default function SetupWizard({ onComplete, onSkip }) {
                   {Object.entries(dependencies).map(([key, data]) => {
                     const isOk = data.installed;
                     return (
-                      <div key={key} className={`p-4 rounded-2xl bg-slate-900/30 border ${isOk ? 'border-emerald-500/25 bg-emerald-950/5' : 'border-slate-800'} flex items-center justify-between glass-card`}>
+                      <div key={key} className={`p-4 rounded-2xl bg-white dark:bg-slate-900/30 border ${isOk ? 'border-emerald-200 dark:border-emerald-500/25 bg-emerald-50/40 dark:bg-emerald-950/5' : 'border-slate-200 dark:border-slate-800'} flex items-center justify-between shadow-sm dark:shadow-md`}>
                         <div className="flex items-center gap-4">
-                          <div className={`p-2.5 rounded-xl ${isOk ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-500'}`}>
+                          <div className={`p-2.5 rounded-xl ${isOk ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-amber-500/10 text-amber-600 dark:text-amber-500'}`}>
                             {key === "mariadb" ? <Database className="w-5 h-5" /> : 
                              key === "redis" ? <Cpu className="w-5 h-5" /> : 
                              key === "bench" ? <Terminal className="w-5 h-5" /> :
                              <Server className="w-5 h-5" />}
                           </div>
                           <div>
-                            <h3 className="text-xs font-bold text-slate-200 capitalize">{key === "mariadb" ? "MariaDB SQL Server" : key === "bench" ? "Frappe Bench CLI" : key}</h3>
+                            <h3 className="text-xs font-bold text-slate-800 dark:text-slate-200 capitalize">{key === "mariadb" ? "MariaDB SQL Server" : key === "bench" ? "Frappe Bench CLI" : key}</h3>
                             <p className="text-[10px] text-slate-500 mt-0.5">
                               {isOk ? `Version detected: ${data.version || "Active"}` : "Missing dependency"}
                             </p>
@@ -395,12 +393,12 @@ export default function SetupWizard({ onComplete, onSkip }) {
 
                         <div className="flex items-center gap-2">
                           {isOk ? (
-                            <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
+                            <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
                               <CheckCircle2 className="w-3.5 h-3.5" />
                               Installed
                             </span>
                           ) : (
-                            <span className="flex items-center gap-1 text-[10px] font-bold text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/20">
+                            <span className="flex items-center gap-1 text-[10px] font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/20">
                               <AlertTriangle className="w-3.5 h-3.5" />
                               Missing
                             </span>
@@ -412,11 +410,11 @@ export default function SetupWizard({ onComplete, onSkip }) {
                 </div>
 
                 {/* Info and Actions */}
-                <div className="mt-4 p-4 rounded-2xl bg-slate-900/40 border border-slate-800 flex gap-4 items-start glass-panel">
-                  <Info className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
+                <div className="mt-4 p-4 rounded-2xl bg-blue-50/50 dark:bg-slate-900/40 border border-blue-100 dark:border-slate-800 flex gap-4 items-start shadow-sm">
+                  <Info className="w-5 h-5 text-blue-600 dark:text-blue-500 shrink-0 mt-0.5" />
                   <div>
-                    <h4 className="text-xs font-bold text-slate-200">How to proceed:</h4>
-                    <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
+                    <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200">How to proceed:</h4>
+                    <p className="text-[11px] text-slate-650 dark:text-slate-400 mt-1 leading-relaxed">
                       If any components are marked as missing, we will step through each dependency to install them. Click <strong>Configure Steps</strong> to begin configuring them one-by-one, or you can run installs directly.
                     </p>
                   </div>
@@ -425,7 +423,7 @@ export default function SetupWizard({ onComplete, onSkip }) {
                 <div className="flex justify-between items-center mt-6">
                   <button 
                     onClick={() => setCurrentStep(0)}
-                    className="px-5 py-2.5 rounded-xl border border-slate-700/50 hover:bg-slate-800 text-slate-350 flex items-center gap-2 transition-all cursor-pointer text-xs font-semibold"
+                    className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700/50 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-350 flex items-center gap-2 transition-all cursor-pointer text-xs font-semibold"
                   >
                     <ArrowLeft className="w-4 h-4" />
                     Back
@@ -434,7 +432,7 @@ export default function SetupWizard({ onComplete, onSkip }) {
                   <div className="flex gap-3">
                     <button 
                       onClick={scanDependencies}
-                      className="px-5 py-2.5 rounded-xl border border-slate-700 hover:bg-slate-800 text-slate-200 flex items-center gap-2 transition-all cursor-pointer text-xs font-semibold"
+                      className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 flex items-center gap-2 transition-all cursor-pointer text-xs font-semibold"
                     >
                       <RefreshCw className="w-3.5 h-3.5" />
                       Rescan System
@@ -460,7 +458,7 @@ export default function SetupWizard({ onComplete, onSkip }) {
             
             {/* Timeline sidebar panel */}
             <div className="w-full md:w-[220px] flex flex-col gap-3 shrink-0">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2 px-1">Setup Progress</h3>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-450 dark:text-slate-500 mb-2 px-1">Setup Progress</h3>
               <div className="flex flex-row md:flex-col gap-2 overflow-x-auto md:overflow-x-visible pb-3 md:pb-0 scrollbar-none">
                 {steps.map((st, idx) => {
                   const stepNum = idx + 2;
@@ -474,15 +472,15 @@ export default function SetupWizard({ onComplete, onSkip }) {
                       onClick={() => setCurrentStep(stepNum)}
                       className={`flex items-center gap-3 p-2.5 rounded-xl text-left border transition-all shrink-0 select-none cursor-pointer ${
                         isActive 
-                        ? 'bg-blue-600/10 border-blue-500/30 text-blue-400 font-semibold'
-                        : isCompleted
-                        ? 'bg-emerald-950/5 border-emerald-500/10 text-emerald-500'
-                        : 'bg-slate-900/20 border-slate-800/40 text-slate-500 hover:text-slate-400'
+                        ? 'bg-blue-50 dark:bg-blue-600/10 border-blue-200 dark:border-blue-500/30 text-blue-600 dark:text-blue-400 font-semibold'
+                        : isCompleted || isDepInstalled
+                        ? 'bg-emerald-55 dark:bg-emerald-950/5 border-emerald-200 dark:border-emerald-500/10 text-emerald-600 dark:text-emerald-500'
+                        : 'bg-white dark:bg-slate-900/20 border-slate-200 dark:border-slate-800/40 text-slate-500 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800/50 hover:text-slate-700 dark:hover:text-slate-400'
                       }`}
                     >
                       <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
                         isActive ? 'bg-blue-500 text-white' :
-                        isCompleted || isDepInstalled ? 'bg-emerald-500 text-white' : 'bg-slate-800 text-slate-500'
+                        isCompleted || isDepInstalled ? 'bg-emerald-500 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-500'
                       }`}>
                         {isCompleted || isDepInstalled ? <CheckCircle2 className="w-3.5 h-3.5" /> : idx + 1}
                       </div>
@@ -497,11 +495,11 @@ export default function SetupWizard({ onComplete, onSkip }) {
             <div className="flex-1 flex flex-col gap-6">
               
               {/* Card headers */}
-              <div className="p-6 rounded-2xl bg-slate-900/60 border border-slate-800/80 glass-panel flex flex-col gap-4">
+              <div className="p-6 rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800/80 shadow-sm dark:shadow-md flex flex-col gap-4">
                 <div className="flex justify-between items-start gap-4">
                   <div>
-                    <h2 className="text-xl font-extrabold text-white">{activeStepDetails.title}</h2>
-                    <p className="text-slate-400 text-xs mt-1 leading-relaxed">
+                    <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">{activeStepDetails.title}</h2>
+                    <p className="text-slate-600 dark:text-slate-400 text-xs mt-1 leading-relaxed">
                       {activeStepDetails.description}
                     </p>
                   </div>
@@ -509,12 +507,12 @@ export default function SetupWizard({ onComplete, onSkip }) {
                   {activeStepDetails.checkKey && (
                     <div>
                       {dependencies[activeStepDetails.checkKey]?.installed ? (
-                        <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20 whitespace-nowrap">
+                        <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20 whitespace-nowrap">
                           <CheckCircle2 className="w-3.5 h-3.5" />
                           Verified
                         </span>
                       ) : (
-                        <span className="flex items-center gap-1 text-[10px] font-bold text-amber-500 bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/20 whitespace-nowrap">
+                        <span className="flex items-center gap-1 text-[10px] font-bold text-amber-600 dark:text-amber-500 bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/20 whitespace-nowrap">
                           <AlertTriangle className="w-3.5 h-3.5" />
                           Requires Install
                         </span>
@@ -523,26 +521,26 @@ export default function SetupWizard({ onComplete, onSkip }) {
                   )}
                 </div>
 
-                <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800/40 text-[11px] leading-relaxed text-slate-400">
-                  <span className="font-bold text-slate-200">Why this is needed:</span> {activeStepDetails.why}
+                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/40 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
+                  <span className="font-bold text-slate-800 dark:text-slate-200">Why this is needed:</span> {activeStepDetails.why}
                 </div>
 
                 {/* Instruction command card */}
                 {activeStepDetails.instructions && (
                   <div className="flex flex-col gap-2">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Terminal Command</p>
-                    <div className="p-3 bg-slate-950 rounded-xl border border-slate-800/60 flex items-center justify-between font-mono text-[11px] text-slate-350 select-all">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Terminal Command</p>
+                    <div className="p-3 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800/60 flex items-center justify-between font-mono text-[11px] text-slate-700 dark:text-slate-350 select-all">
                       <span className="truncate mr-4">$ {activeStepDetails.instructions}</span>
                       <button 
                         onClick={() => copyToClipboard(activeStepDetails.instructions, activeStepDetails.id)}
-                        className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-500 hover:text-white transition-colors shrink-0 cursor-pointer"
+                        className="p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-805 dark:hover:text-white transition-colors shrink-0 cursor-pointer"
                         title="Copy command"
                       >
                         <Clipboard className="w-4 h-4" />
                       </button>
                     </div>
                     {copiedText === activeStepDetails.id && (
-                      <p className="text-[10px] text-emerald-400 font-semibold self-end">Copied command!</p>
+                      <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold self-end">Copied command!</p>
                     )}
                   </div>
                 )}
@@ -590,7 +588,7 @@ export default function SetupWizard({ onComplete, onSkip }) {
                       href={activeStepDetails.doc}
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="px-4 py-2 bg-slate-800 hover:bg-slate-700/80 border border-slate-700/60 rounded-xl text-xs text-slate-300 font-bold flex items-center gap-2 transition-colors select-none"
+                      className="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700/80 border border-slate-205 dark:border-slate-700/60 rounded-xl text-xs text-slate-700 dark:text-slate-300 font-bold flex items-center gap-2 transition-colors select-none"
                     >
                       <BookOpen className="w-4 h-4" />
                       Documentation
@@ -600,7 +598,7 @@ export default function SetupWizard({ onComplete, onSkip }) {
                   {activeStepDetails.checkKey && (
                     <button
                       onClick={scanDependencies}
-                      className="px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-700/50 rounded-xl text-xs text-slate-350 hover:text-white font-bold flex items-center gap-2 transition-colors ml-auto cursor-pointer"
+                      className="px-4 py-2 bg-slate-105 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700/50 rounded-xl text-xs text-slate-600 dark:text-slate-350 font-bold flex items-center gap-2 transition-colors ml-auto cursor-pointer"
                     >
                       <RefreshCw className="w-3.5 h-3.5" />
                       Verify Installation
@@ -611,30 +609,30 @@ export default function SetupWizard({ onComplete, onSkip }) {
 
               {/* Step 8 Form Panel (Create Bench) */}
               {activeStepDetails.id === "create" && (
-                <div className="p-6 rounded-2xl bg-slate-900/60 border border-slate-800/80 glass-panel flex flex-col gap-4">
-                  <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-2 flex items-center gap-2">
+                <div className="p-6 rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800/80 shadow-sm dark:shadow-md flex flex-col gap-4">
+                  <h3 className="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-wider mb-2 flex items-center gap-2">
                     <Settings className="w-4 h-4 text-blue-500" />
                     Configure Bench Directory
                   </h3>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-[11px] font-bold text-slate-400">Bench Directory Name</label>
+                      <label className="text-[11px] font-bold text-slate-550 dark:text-slate-400">Bench Directory Name</label>
                       <input 
                         type="text"
                         value={benchForm.name}
                         onChange={(e) => setBenchForm({ ...benchForm, name: e.target.value })}
-                        className="p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs focus:border-blue-500 focus:outline-none"
+                        className="p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs focus:border-blue-500 focus:outline-none text-slate-800 dark:text-slate-100"
                         placeholder="e.g. frappe-bench"
                       />
                     </div>
 
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-[11px] font-bold text-slate-400">Frappe Framework Branch</label>
+                      <label className="text-[11px] font-bold text-slate-550 dark:text-slate-400">Frappe Framework Branch</label>
                       <select 
                         value={benchForm.version}
                         onChange={(e) => setBenchForm({ ...benchForm, version: e.target.value })}
-                        className="p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs focus:border-blue-500 focus:outline-none"
+                        className="p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs focus:border-blue-500 focus:outline-none text-slate-800 dark:text-slate-100"
                       >
                         <option value="version-15">Version 15 (LTS)</option>
                         <option value="version-14">Version 14</option>
@@ -643,12 +641,12 @@ export default function SetupWizard({ onComplete, onSkip }) {
                     </div>
 
                     <div className="flex flex-col gap-1.5 md:col-span-2">
-                      <label className="text-[11px] font-bold text-slate-400">Python Interpreter Path</label>
+                      <label className="text-[11px] font-bold text-slate-550 dark:text-slate-400">Python Interpreter Path</label>
                       <input 
                         type="text"
                         value={benchForm.python}
                         onChange={(e) => setBenchForm({ ...benchForm, python: e.target.value })}
-                        className="p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs focus:border-blue-500 focus:outline-none font-mono"
+                        className="p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs focus:border-blue-500 focus:outline-none font-mono text-slate-800 dark:text-slate-100"
                         placeholder="e.g. /usr/bin/python3"
                       />
                     </div>
@@ -676,7 +674,7 @@ export default function SetupWizard({ onComplete, onSkip }) {
 
               {/* Console log output window */}
               {(logs || taskStatus === "running") && (
-                <div className="rounded-2xl border border-slate-800 bg-slate-950 overflow-hidden flex flex-col h-[280px] shadow-2xl glass-panel">
+                <div className="rounded-2xl border border-slate-800 bg-slate-950 overflow-hidden flex flex-col h-[280px] shadow-2xl terminal-drawer">
                   
                   {/* Console Header */}
                   <div className="px-4 py-2 border-b border-slate-900 bg-slate-900/80 flex justify-between items-center">
@@ -710,10 +708,10 @@ export default function SetupWizard({ onComplete, onSkip }) {
               )}
 
               {/* Troubleshooting/Help panel */}
-              <div className="p-4 rounded-xl border border-amber-500/10 bg-amber-500/5 text-[11px] text-amber-500/80 leading-relaxed flex gap-3">
-                <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5" />
+              <div className="p-4 rounded-xl border border-amber-200 dark:border-amber-500/10 bg-amber-50/50 dark:bg-amber-500/5 text-[11px] text-amber-700 dark:text-amber-500/80 leading-relaxed flex gap-3">
+                <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5 animate-pulse" />
                 <div>
-                  <h4 className="font-bold text-amber-500">Stuck or having issues installing?</h4>
+                  <h4 className="font-bold text-amber-700 dark:text-amber-550">Stuck or having issues installing?</h4>
                   <p className="mt-0.5">
                     If automatic installation fails, copy the terminal command above, open your WSL Terminal manually, paste and run it there. When you return here, click <strong>Verify Installation</strong> to re-check.
                   </p>
@@ -724,7 +722,7 @@ export default function SetupWizard({ onComplete, onSkip }) {
               <div className="flex justify-between items-center mt-4">
                 <button 
                   onClick={() => setCurrentStep(currentStep - 1)}
-                  className="px-5 py-2.5 rounded-xl border border-slate-700/50 hover:bg-slate-850 text-slate-400 hover:text-white flex items-center gap-2 transition-all cursor-pointer text-xs font-semibold"
+                  className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700/50 hover:bg-slate-100 dark:hover:bg-slate-850 text-slate-650 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center gap-2 transition-all cursor-pointer text-xs font-semibold"
                 >
                   <ArrowLeft className="w-4 h-4" />
                   Previous Step
@@ -739,7 +737,7 @@ export default function SetupWizard({ onComplete, onSkip }) {
                     }
                   }}
                   disabled={activeStepDetails.checkKey && !dependencies[activeStepDetails.checkKey]?.installed}
-                  className="px-5 py-2.5 bg-blue-600 disabled:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-blue-500 text-white font-bold rounded-xl shadow-md shadow-blue-500/10 transition-all flex items-center gap-2 cursor-pointer text-xs"
+                  className="px-5 py-2.5 bg-blue-600 disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-blue-500 text-white font-bold rounded-xl shadow-md shadow-blue-500/10 transition-all flex items-center gap-2 cursor-pointer text-xs"
                 >
                   {currentStep === steps.length + 1 ? "Complete Setup" : "Next Step"}
                   <ArrowRight className="w-4 h-4" />
@@ -760,10 +758,10 @@ export default function SetupWizard({ onComplete, onSkip }) {
               <Rocket className="w-14 h-14 text-emerald-400 drop-shadow-[0_0_15px_rgba(16,185,129,0.5)]" />
             </div>
 
-            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight mb-3 text-white">
+            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight mb-3 text-slate-900 dark:text-white">
               Bench Initialized Successfully!
             </h1>
-            <p className="text-slate-400 max-w-lg text-sm mb-8 leading-relaxed">
+            <p className="text-slate-650 dark:text-slate-400 max-w-lg text-sm mb-8 leading-relaxed">
               Your system environment is fully configured and your first Frappe Bench has been created. You are now ready to add applications, create database sites, and start coding.
             </p>
 
