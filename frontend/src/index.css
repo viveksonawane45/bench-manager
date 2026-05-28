@@ -1,0 +1,359 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-color: #f8fafc; /* light slate-50 */
+  --card-color: #ffffff; /* white */
+  --border-color: #e2e8f0; /* slate-200 */
+  --accent-color: #2563eb; /* blue-600 */
+  --text-color: #0f172a; /* slate-900 */
+  --text-muted-color: #64748b; /* slate-500 */
+  --scroll-track: #f1f5f9;
+  --scroll-thumb: #cbd5e1;
+  --scroll-thumb-hover: #94a3b8;
+}
+
+.dark {
+  --bg-color: #0f172a; /* slate-900 */
+  --card-color: #1e293b; /* slate-800 */
+  --border-color: #334155; /* slate-700 */
+  --accent-color: #3b82f6; /* blue-500 */
+  --text-color: #f1f5f9; /* slate-100 */
+  --text-muted-color: #94a3b8; /* slate-400 */
+  --scroll-track: #0f172a;
+  --scroll-thumb: #334155;
+  --scroll-thumb-hover: #475569;
+}
+
+@layer base {
+  body {
+    @apply bg-darkBg text-darkText font-sans antialiased overflow-x-hidden transition-colors duration-200;
+    background-image: 
+      radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.03) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, rgba(16, 185, 129, 0.03) 0px, transparent 50%),
+      radial-gradient(at 50% 100%, rgba(245, 158, 11, 0.02) 0px, transparent 50%);
+    background-attachment: fixed;
+  }
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--scroll-track);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scroll-thumb);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scroll-thumb-hover);
+}
+
+/* Glassmorphism Styles */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 0, 0, 0.07);
+}
+
+.dark .glass-panel {
+  background: rgba(30, 41, 59, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dark .glass-card {
+  background: rgba(30, 41, 59, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+}
+
+.glass-card:hover {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(37, 99, 235, 0.25);
+  transform: translateY(-2px);
+}
+
+.dark .glass-card:hover {
+  background: rgba(30, 41, 59, 0.6);
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.glass-input {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  color: #0f172a;
+  transition: all 0.2s ease;
+}
+
+.dark .glass-input {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #f1f5f9;
+}
+
+.glass-input:focus {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+  outline: none;
+}
+
+/* Micro-animations */
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(0.98); }
+}
+
+.pulse-soft {
+  animation: pulse-soft 3s infinite ease-in-out;
+}
+
+.erpnext-logo-gradient {
+  background: linear-gradient(135deg, #3b82f6 0%, #10b981 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ERPNext-inspired Light Theme Overrides */
+html:not(.dark) {
+  --bg-color: #f3f4f6; /* light grey backdrop matching screenshot */
+  --card-color: #ffffff; /* crisp white cards */
+  --border-color: #e5e7eb; /* clean subtle border */
+  --text-color: #1f2937; /* dark text */
+  --text-muted-color: #4b5563; /* grey subtext */
+}
+
+/* Base element color corrections when in light theme */
+html:not(.dark) .text-white:not(.bg-darkAccent):not(.bg-success):not(.bg-danger):not(.bg-warning):not(button):not(.btn):not(.active):not(.w-5):not(.w-6):not(.h-5):not(.h-6) {
+  color: var(--text-color) !important;
+}
+
+/* Make sure active buttons or badges keep their white text and SVGs */
+html:not(.dark) button.text-white,
+html:not(.dark) .bg-darkAccent .text-white,
+html:not(.dark) .bg-success .text-white,
+html:not(.dark) .bg-danger .text-white,
+html:not(.dark) .bg-warning .text-white {
+  color: #ffffff !important;
+}
+
+html:not(.dark) .text-slate-100,
+html:not(.dark) .text-slate-200,
+html:not(.dark) .text-slate-300,
+html:not(.dark) .text-slate-350 {
+  color: var(--text-color) !important;
+}
+
+html:not(.dark) .text-slate-400,
+html:not(.dark) .text-slate-500,
+html:not(.dark) .text-darkTextMuted {
+  color: var(--text-muted-color) !important;
+}
+
+html:not(.dark) .text-darkText {
+  color: var(--text-color) !important;
+}
+
+/* Background overrides */
+html:not(.dark) body,
+html:not(.dark) #root,
+html:not(.dark) .bg-darkBg {
+  background-color: var(--bg-color) !important;
+  background-image: none !important;
+}
+
+html:not(.dark) .glass-card {
+  background-color: var(--card-color) !important;
+  background: var(--card-color) !important;
+  border-color: var(--border-color) !important;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.04) !important;
+}
+
+html:not(.dark) .glass-card:hover {
+  background-color: var(--card-color) !important;
+  background: var(--card-color) !important;
+  border-color: var(--accent-color) !important;
+}
+
+html:not(.dark) .glass-panel {
+  background-color: var(--card-color) !important;
+  background: var(--card-color) !important;
+  border-color: var(--border-color) !important;
+}
+
+html:not(.dark) header,
+html:not(.dark) .bg-darkCard\/50,
+html:not(.dark) .bg-darkCard\/40 {
+  background-color: var(--card-color) !important;
+  background: var(--card-color) !important;
+  border-color: var(--border-color) !important;
+}
+
+html:not(.dark) .bg-slate-950:not(.terminal-drawer):not(.terminal-dark) {
+  background-color: var(--bg-color) !important;
+  color: var(--text-color) !important;
+}
+
+html:not(.dark) .bg-slate-900:not(.terminal-drawer):not(.terminal-dark) {
+  background-color: var(--card-color) !important;
+  color: var(--text-color) !important;
+  border-color: var(--border-color) !important;
+}
+
+html:not(.dark) .bg-slate-900\/30,
+html:not(.dark) .bg-slate-900\/40,
+html:not(.dark) .bg-slate-900\/60,
+html:not(.dark) .bg-slate-800\/40,
+html:not(.dark) .bg-slate-800\/60 {
+  background-color: rgba(243, 244, 246, 0.7) !important;
+  color: var(--text-color) !important;
+  border-color: var(--border-color) !important;
+}
+
+html:not(.dark) .hover\:bg-slate-800\/40:hover {
+  background-color: rgba(229, 231, 235, 0.8) !important;
+}
+
+/* Inputs and Select tags */
+html:not(.dark) input,
+html:not(.dark) select,
+html:not(.dark) textarea {
+  background-color: #ffffff !important;
+  color: var(--text-color) !important;
+  border-color: #cbd5e1 !important;
+}
+
+html:not(.dark) input.glass-input,
+html:not(.dark) select.glass-input {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: var(--text-color) !important;
+}
+
+html:not(.dark) input::placeholder,
+html:not(.dark) select::placeholder,
+html:not(.dark) textarea::placeholder {
+  color: #9ca3af !important;
+}
+
+/* Buttons with dark backgrounds in dark mode should become light buttons */
+html:not(.dark) .bg-slate-800:not(.terminal-drawer):not(.terminal-dark):not(.bg-darkAccent):not(.bg-success):not(.bg-danger):not(.bg-warning) {
+  background-color: #f3f4f6 !important;
+  color: var(--text-color) !important;
+  border-color: #e5e7eb !important;
+}
+
+html:not(.dark) .bg-slate-800:not(.terminal-drawer):not(.terminal-dark):not(.bg-darkAccent):not(.bg-success):not(.bg-danger):not(.bg-warning):hover {
+  background-color: #e5e7eb !important;
+}
+
+html:not(.dark) .hover\:bg-slate-700:hover:not(.bg-darkAccent):not(.bg-success):not(.bg-danger):not(.bg-warning) {
+  background-color: #e5e7eb !important;
+}
+
+/* Table header and row overrides */
+html:not(.dark) tr.bg-slate-900\/40 {
+  background-color: #f9fafb !important;
+  color: var(--text-color) !important;
+}
+
+html:not(.dark) tr.hover\:bg-slate-800\/10:hover {
+  background-color: rgba(0, 0, 0, 0.03) !important;
+}
+
+/* Border overrides */
+html:not(.dark) .border-darkBorder,
+html:not(.dark) .border-darkBorder\/30,
+html:not(.dark) .border-darkBorder\/35,
+html:not(.dark) .border-darkBorder\/40 {
+  border-color: var(--border-color) !important;
+}
+
+/* Modals and Modal Overlays */
+html:not(.dark) .fixed.bg-slate-950\/70 {
+  background-color: rgba(15, 23, 42, 0.3) !important;
+}
+
+/* Scrollbar styling for light theme */
+html:not(.dark) {
+  --scroll-track: #f3f4f6;
+  --scroll-thumb: #d1d5db;
+  --scroll-thumb-hover: #9ca3af;
+}
+
+/* Keep terminal drawer dark and high contrast */
+.terminal-drawer,
+.terminal-dark,
+.terminal-drawer *,
+.terminal-dark *,
+html:not(.dark) .terminal-drawer,
+html:not(.dark) .terminal-dark,
+html:not(.dark) .terminal-drawer *,
+html:not(.dark) .terminal-dark * {
+  background-color: #0f172a !important;
+  color: #f1f5f9 !important; /* high contrast white/light gray */
+}
+
+/* Specific console colors */
+.terminal-drawer h3,
+.terminal-dark h3,
+html:not(.dark) .terminal-drawer h3,
+html:not(.dark) .terminal-dark h3 {
+  color: #ffffff !important;
+}
+
+.terminal-drawer .text-darkAccent,
+.terminal-dark .text-darkAccent,
+html:not(.dark) .terminal-drawer .text-darkAccent,
+html:not(.dark) .terminal-dark .text-darkAccent {
+  color: #3b82f6 !important;
+}
+
+.terminal-drawer .text-warning,
+.terminal-dark .text-warning,
+html:not(.dark) .terminal-drawer .text-warning,
+html:not(.dark) .terminal-dark .text-warning {
+  color: #f59e0b !important;
+}
+
+.terminal-drawer .text-success,
+.terminal-dark .text-success,
+html:not(.dark) .terminal-drawer .text-success,
+html:not(.dark) .terminal-dark .text-success {
+  color: #10b981 !important;
+}
+
+.terminal-drawer .text-danger,
+.terminal-dark .text-danger,
+html:not(.dark) .terminal-drawer .text-danger,
+html:not(.dark) .terminal-dark .text-danger {
+  color: #ef4444 !important;
+}
+
+.terminal-drawer .text-darkTextMuted,
+.terminal-dark .text-darkTextMuted,
+html:not(.dark) .terminal-drawer .text-darkTextMuted,
+html:not(.dark) .terminal-dark .text-darkTextMuted {
+  color: #94a3b8 !important;
+}
+
+
+
