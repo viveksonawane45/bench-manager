@@ -594,12 +594,22 @@ export default function SetupWizard({ onComplete, onSkip }) {
                       disabled={dependencies[activeStepDetails.checkKey]?.installed || taskStatus === "running"}
                       className="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-xl text-xs flex items-center gap-2 cursor-pointer shadow-md shadow-blue-600/10"
                     >
-                      {taskStatus === "running" ? (
-                        <RefreshCw className="w-4 h-4 animate-spin" />
+                      {dependencies[activeStepDetails.checkKey]?.installed ? (
+                        <>
+                          <CheckCircle2 className="w-4 h-4" />
+                          Already Installed
+                        </>
+                      ) : taskStatus === "running" ? (
+                        <>
+                          <RefreshCw className="w-4 h-4 animate-spin" />
+                          Installing...
+                        </>
                       ) : (
-                        <Play className="w-4 h-4" />
+                        <>
+                          <Play className="w-4 h-4" />
+                          Install Automatically
+                        </>
                       )}
-                      Install Automatically
                     </button>
                   )}
 
