@@ -7,7 +7,8 @@ import {
   Terminal, 
   Activity, 
   Database,
-  Cpu
+  Cpu,
+  Rocket
 } from "lucide-react";
 
 export default function Sidebar({ activeTab, setActiveTab }) {
@@ -17,8 +18,10 @@ export default function Sidebar({ activeTab, setActiveTab }) {
     { id: "sites", name: "Sites", icon: Globe },
     { id: "apps", name: "Apps", icon: AppWindow },
     { id: "processes", name: "Process Manager", icon: Terminal },
-    { id: "system", name: "System Monitor", icon: Activity }
+    { id: "system", name: "System Monitor", icon: Activity },
+    { id: "setup", name: "Setup Wizard", icon: Rocket }
   ];
+
 
   return (
     <div className="w-64 glass-panel border-r border-darkBorder flex flex-col h-screen sticky top-0">

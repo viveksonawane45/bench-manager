@@ -129,6 +129,20 @@ export default function App() {
     checkSetupRequired();
   }, [isBackendOnline, initialBenchesLoaded, benches]);
 
+  // Handle manual setup wizard trigger via navigation tab
+  useEffect(() => {
+    if (activeTab === "setup") {
+      // Clear flags to allow starting the wizard
+      localStorage.removeItem("setup_skipped");
+      localStorage.removeItem("setup_completed");
+      // Reset step index to step 0
+      localStorage.setItem("setup_step", "0");
+      setShowSetupWizard(true);
+      setActiveTab("dashboard");
+    }
+  }, [activeTab]);
+
+
 
   // Function to execute an API and handle the task stream
   const handleRunTask = (apiPromise) => {
