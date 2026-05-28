@@ -27,6 +27,8 @@ export default function SetupWizard({ onComplete, onSkip }) {
   const [logs, setLogs] = useState("");
   const [taskStatus, setTaskStatus] = useState("idle");
   const [copiedText, setCopiedText] = useState(null);
+  const [showStartModal, setShowStartModal] = useState(false);
+  const [showVerifyFeedback, setShowVerifyFeedback] = useState({});
   
   // Bench Creation Form State
   const [benchForm, setBenchForm] = useState({
@@ -146,6 +148,24 @@ export default function SetupWizard({ onComplete, onSkip }) {
     } catch (err) {
       setLogs((prev) => prev + `\nError initiating installation: ${err.message}`);
       setTaskStatus("failed");
+    }
+  };
+
+  const handleVerify = async (depName) => {
+    try {
+      const res = await fetch(`${API_HOST}/api/system/check`);
+      if (res.ok) {
+        const data = await res.json();
+        setDependencies(data);
+        const isOk = data[depName]?.installed;
+        
+        setShowVerifyFeedback(prev => ({ ...prev, [depName]: isOk ? "verified" : "missing" }));
+        setTimeout(() => {
+          setShowVerifyFeedback(prev => ({ ...prev, [depName]: null }));
+        }, 3000);
+      }
+    } catch (err) {
+      console.error("Error in verification:", err);
     }
   };
 
@@ -323,7 +343,7 @@ export default function SetupWizard({ onComplete, onSkip }) {
             <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-4 text-slate-900 dark:text-white">
               Create Your First Frappe Bench
             </h1>
-            <p className="text-slate-650 dark:text-slate-400 max-w-xl text-base md:text-lg mb-8 leading-relaxed">
+            <p className="text-slate-655 dark:text-slate-400 max-w-xl text-base md:text-lg mb-8 leading-relaxed">
               Let's prepare your system and install everything required for ERPNext development. We'll verify your WSL dependencies and help create your first workspace.
             </p>
 
@@ -345,8 +365,8 @@ export default function SetupWizard({ onComplete, onSkip }) {
 
             <div className="flex gap-4">
               <button 
-                onClick={() => setCurrentStep(1)}
-                className="px-6 py-3.5 bg-gradient-to-r from-blue-600 to-teal-500 hover:from-blue-500 hover:to-teal-400 text-white font-bold rounded-2xl shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 transition-all flex items-center gap-2 cursor-pointer text-sm"
+                onClick={() => setShowStartModal(true)}
+                className="px-6 py-3.5 bg-gradient-to-r from-blue-600 to-teal-500 hover:from-blue-500 hover:to-teal-400 text-white font-bold rounded-2xl shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 transition-all flex items-center gap-2 cursor-pointer text-sm animate-pulse"
               >
                 Start Setup
                 <ArrowRight className="w-4 h-4" />
@@ -474,8 +494,8 @@ export default function SetupWizard({ onComplete, onSkip }) {
                         isActive 
                         ? 'bg-blue-50 dark:bg-blue-600/10 border-blue-200 dark:border-blue-500/30 text-blue-600 dark:text-blue-400 font-semibold'
                         : isCompleted || isDepInstalled
-                        ? 'bg-emerald-55 dark:bg-emerald-950/5 border-emerald-200 dark:border-emerald-500/10 text-emerald-600 dark:text-emerald-500'
-                        : 'bg-white dark:bg-slate-900/20 border-slate-200 dark:border-slate-800/40 text-slate-500 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800/50 hover:text-slate-700 dark:hover:text-slate-400'
+                        ? 'bg-emerald-50/50 dark:bg-emerald-950/5 border-emerald-100 dark:border-emerald-500/10 text-emerald-600 dark:text-emerald-500'
+                        : 'bg-white dark:bg-slate-900/20 border-slate-200 dark:border-slate-800/40 text-slate-500 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-805 hover:text-slate-700 dark:hover:text-slate-400'
                       }`}
                     >
                       <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
@@ -499,7 +519,7 @@ export default function SetupWizard({ onComplete, onSkip }) {
                 <div className="flex justify-between items-start gap-4">
                   <div>
                     <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">{activeStepDetails.title}</h2>
-                    <p className="text-slate-600 dark:text-slate-400 text-xs mt-1 leading-relaxed">
+                    <p className="text-slate-650 dark:text-slate-400 text-xs mt-1 leading-relaxed">
                       {activeStepDetails.description}
                     </p>
                   </div>
@@ -521,15 +541,15 @@ export default function SetupWizard({ onComplete, onSkip }) {
                   )}
                 </div>
 
-                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/40 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
-                  <span className="font-bold text-slate-800 dark:text-slate-200">Why this is needed:</span> {activeStepDetails.why}
+                <div className="p-4 rounded-xl bg-slate-55 dark:bg-slate-955/60 border border-slate-200 dark:border-slate-800/40 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
+                  <span className="font-bold text-slate-880 dark:text-slate-200">Why this is needed:</span> {activeStepDetails.why}
                 </div>
 
                 {/* Instruction command card */}
                 {activeStepDetails.instructions && (
                   <div className="flex flex-col gap-2">
                     <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Terminal Command</p>
-                    <div className="p-3 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800/60 flex items-center justify-between font-mono text-[11px] text-slate-700 dark:text-slate-350 select-all">
+                    <div className="p-3 bg-slate-50 dark:bg-slate-955 rounded-xl border border-slate-200 dark:border-slate-800/60 flex items-center justify-between font-mono text-[11px] text-slate-700 dark:text-slate-350 select-all">
                       <span className="truncate mr-4">$ {activeStepDetails.instructions}</span>
                       <button 
                         onClick={() => copyToClipboard(activeStepDetails.instructions, activeStepDetails.id)}
@@ -588,7 +608,7 @@ export default function SetupWizard({ onComplete, onSkip }) {
                       href={activeStepDetails.doc}
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700/80 border border-slate-205 dark:border-slate-700/60 rounded-xl text-xs text-slate-700 dark:text-slate-300 font-bold flex items-center gap-2 transition-colors select-none"
+                      className="px-4 py-2 bg-slate-100 hover:bg-slate-202 dark:bg-slate-800 dark:hover:bg-slate-700/80 border border-slate-205 dark:border-slate-700/60 rounded-xl text-xs text-slate-700 dark:text-slate-300 font-bold flex items-center gap-2 transition-colors select-none"
                     >
                       <BookOpen className="w-4 h-4" />
                       Documentation
@@ -596,13 +616,27 @@ export default function SetupWizard({ onComplete, onSkip }) {
                   )}
 
                   {activeStepDetails.checkKey && (
-                    <button
-                      onClick={scanDependencies}
-                      className="px-4 py-2 bg-slate-105 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700/50 rounded-xl text-xs text-slate-600 dark:text-slate-350 font-bold flex items-center gap-2 transition-colors ml-auto cursor-pointer"
-                    >
-                      <RefreshCw className="w-3.5 h-3.5" />
-                      Verify Installation
-                    </button>
+                    <div className="flex items-center gap-3 ml-auto">
+                      {/* Verify feedback toggle */}
+                      {showVerifyFeedback[activeStepDetails.checkKey] === "verified" && (
+                        <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 px-2.5 py-1.5 rounded-xl border border-emerald-250 animate-in fade-in zoom-in-95 duration-200">
+                          Verified ✓
+                        </span>
+                      )}
+                      {showVerifyFeedback[activeStepDetails.checkKey] === "missing" && (
+                        <span className="text-[10px] font-bold text-rose-500 bg-rose-50 dark:bg-rose-950/20 px-2.5 py-1.5 rounded-xl border border-rose-250 animate-in fade-in zoom-in-95 duration-200">
+                          Not Detected ✗
+                        </span>
+                      )}
+                      
+                      <button
+                        onClick={() => handleVerify(activeStepDetails.checkKey)}
+                        className="px-4 py-2 bg-slate-105 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700/50 rounded-xl text-xs text-slate-605 dark:text-slate-350 font-bold flex items-center gap-2 transition-colors cursor-pointer"
+                      >
+                        <RefreshCw className="w-3.5 h-3.5" />
+                        Verify Installation
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>
@@ -628,7 +662,7 @@ export default function SetupWizard({ onComplete, onSkip }) {
                     </div>
 
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-[11px] font-bold text-slate-550 dark:text-slate-400">Frappe Framework Branch</label>
+                      <label className="text-[11px] font-bold text-slate-555 dark:text-slate-400">Frappe Framework Branch</label>
                       <select 
                         value={benchForm.version}
                         onChange={(e) => setBenchForm({ ...benchForm, version: e.target.value })}
@@ -641,7 +675,7 @@ export default function SetupWizard({ onComplete, onSkip }) {
                     </div>
 
                     <div className="flex flex-col gap-1.5 md:col-span-2">
-                      <label className="text-[11px] font-bold text-slate-550 dark:text-slate-400">Python Interpreter Path</label>
+                      <label className="text-[11px] font-bold text-slate-555 dark:text-slate-400">Python Interpreter Path</label>
                       <input 
                         type="text"
                         value={benchForm.python}
@@ -674,7 +708,7 @@ export default function SetupWizard({ onComplete, onSkip }) {
 
               {/* Console log output window */}
               {(logs || taskStatus === "running") && (
-                <div className="rounded-2xl border border-slate-800 bg-slate-950 overflow-hidden flex flex-col h-[280px] shadow-2xl terminal-drawer">
+                <div className="rounded-2xl border border-slate-800 bg-slate-955 overflow-hidden flex flex-col h-[280px] shadow-2xl terminal-drawer">
                   
                   {/* Console Header */}
                   <div className="px-4 py-2 border-b border-slate-900 bg-slate-900/80 flex justify-between items-center">
@@ -722,7 +756,7 @@ export default function SetupWizard({ onComplete, onSkip }) {
               <div className="flex justify-between items-center mt-4">
                 <button 
                   onClick={() => setCurrentStep(currentStep - 1)}
-                  className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700/50 hover:bg-slate-100 dark:hover:bg-slate-850 text-slate-650 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center gap-2 transition-all cursor-pointer text-xs font-semibold"
+                  className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700/50 hover:bg-slate-105 dark:hover:bg-slate-850 text-slate-650 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center gap-2 transition-all cursor-pointer text-xs font-semibold"
                 >
                   <ArrowLeft className="w-4 h-4" />
                   Previous Step
@@ -736,10 +770,16 @@ export default function SetupWizard({ onComplete, onSkip }) {
                       setCurrentStep(currentStep + 1);
                     }
                   }}
-                  disabled={activeStepDetails.checkKey && !dependencies[activeStepDetails.checkKey]?.installed}
+                  disabled={
+                    activeStepDetails.id === "create" 
+                      ? taskStatus !== "success"
+                      : (activeStepDetails.checkKey && !dependencies[activeStepDetails.checkKey]?.installed)
+                  }
                   className="px-5 py-2.5 bg-blue-600 disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-blue-500 text-white font-bold rounded-xl shadow-md shadow-blue-500/10 transition-all flex items-center gap-2 cursor-pointer text-xs"
                 >
-                  {currentStep === steps.length + 1 ? "Complete Setup" : "Next Step"}
+                  {activeStepDetails.id === "create" 
+                    ? "Finish & Enter Dashboard" 
+                    : (currentStep === steps.length + 1 ? "Complete Setup" : "Next Step")}
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
@@ -776,6 +816,57 @@ export default function SetupWizard({ onComplete, onSkip }) {
         )}
 
       </div>
+
+      {/* Start Setup Modal (Pop-up Interaction for the Start Setup Button) */}
+      {showStartModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 max-w-lg w-full mx-4 shadow-2xl animate-in fade-in zoom-in-95 duration-200 text-slate-800 dark:text-slate-100">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2 flex items-center gap-2 font-sans">
+              <Cpu className="w-5 h-5 text-blue-600 dark:text-blue-500" />
+              Environment Summary Check
+            </h3>
+            <p className="text-xs text-slate-600 dark:text-slate-400 mb-6 leading-relaxed">
+              The setup wizard will scan and verify your local dependencies. Here are the parameters for your Frappe development environment:
+            </p>
+            
+            {/* The stats banner cards inside the popup! */}
+            <div className="grid grid-cols-1 gap-4 mb-6">
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80 flex items-center justify-between">
+                <span className="text-[11px] font-bold text-slate-500">Estimated Setup Time</span>
+                <span className="text-xs font-bold text-slate-800 dark:text-slate-200">15-20 Mins</span>
+              </div>
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-955 border border-slate-200 dark:border-slate-800/80 flex items-center justify-between">
+                <span className="text-[11px] font-bold text-slate-500">Compatibility Environment</span>
+                <span className="text-xs font-bold text-blue-600 dark:text-blue-400">WSL2 + Ubuntu</span>
+              </div>
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-955 border border-slate-200 dark:border-slate-800/80 flex items-center justify-between">
+                <span className="text-[11px] font-bold text-slate-500">System Core Daemon</span>
+                <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">Online</span>
+              </div>
+            </div>
+
+            <div className="flex gap-3 justify-end text-xs font-semibold">
+              <button 
+                onClick={() => setShowStartModal(false)}
+                className="px-4 py-2 border border-slate-200 dark:border-slate-700/60 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={() => {
+                  setShowStartModal(false);
+                  setCurrentStep(1);
+                }}
+                className="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl flex items-center gap-2 cursor-pointer shadow-md shadow-blue-500/10 transition-colors"
+              >
+                Begin Setup Scan
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
