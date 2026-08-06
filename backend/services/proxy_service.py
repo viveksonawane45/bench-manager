@@ -7,13 +7,29 @@ class SiteProxyManager:
     def __init__(self):
         self.servers = {}  # port -> asyncio.AbstractServer
         self.tasks = {}    # port -> asyncio.Task
+        self.targets = {}  # port -> (site_name, target_port)
         self.lock = asyncio.Lock()
 
     async def start_proxy_for_site(self, port: int, site_name: str, target_port: int = 8000):
         async with self.lock:
             if port in self.servers:
-                logger.info(f"Proxy already running on port {port} for site {site_name}")
-                return
+                current_config = self.targets.get(port)
+                if current_config == (site_name, target_port):
+                    logger.info(f"Proxy already running on port {port} with matching config for site {site_name}")
+                    return
+                else:
+                    logger.info(f"Config changed for port {port}: old {current_config}, new ({site_name}, {target_port}). Recreating proxy.")
+                    server = self.servers.pop(port, None)
+                    if server:
+                        server.close()
+                        await server.wait_closed()
+                    task = self.tasks.pop(port, None)
+                    if task:
+                        task.cancel()
+                        try:
+                            await task
+                        except asyncio.CancelledError:
+                            pass
 
             try:
                 # Start and bind the server immediately inside the lock to prevent other tasks from attempting to bind
@@ -23,6 +39,7 @@ class SiteProxyManager:
                     port
                 )
                 self.servers[port] = server
+                self.targets[port] = (site_name, target_port)
 
                 # Run the server's event serving loop in a background task
                 async def serve():
@@ -59,14 +76,59 @@ class SiteProxyManager:
             headers_part = parts[0]
             body_part = parts[1] if len(parts) > 1 else b""
 
-            # Decode and replace Host header case-insensitively
-            lines = headers_part.split(b"\r\n")
-            for i, line in enumerate(lines):
-                if line.lower().startswith(b"host:"):
-                    lines[i] = f"Host: {site_name}".encode('utf-8')
-                    break
+            port_suffix = f"_{port}"
 
-            modified_headers = b"\r\n".join(lines) + b"\r\n\r\n"
+            # Decode and rebuild headers to replace Host, Connection, and insert X-Frappe-Site-Name
+            lines = headers_part.split(b"\r\n")
+            new_lines = []
+            
+            # Keep request line (first line)
+            if lines:
+                new_lines.append(lines[0])
+                
+            for line in lines[1:]:
+                if not line:
+                    continue
+                lower_line = line.lower()
+                # Skip existing Host, Connection, Keep-Alive, and X-Frappe-Site-Name headers to avoid duplicates
+                if (lower_line.startswith(b"host:") or 
+                    lower_line.startswith(b"connection:") or 
+                    lower_line.startswith(b"keep-alive:") or 
+                    lower_line.startswith(b"x-frappe-site-name:")):
+                    continue
+
+                # Isolate Cookie header for this port (sid_<port> -> sid)
+                if lower_line.startswith(b"cookie:"):
+                    cookie_str = line[7:].decode('utf-8', errors='ignore').strip()
+                    cookies = [c.strip() for c in cookie_str.split(";") if c.strip()]
+                    rewritten_cookies = []
+                    
+                    for c in cookies:
+                        if "=" in c:
+                            key, val = c.split("=", 1)
+                            key = key.strip()
+                            val = val.strip()
+                            if key.endswith(port_suffix):
+                                base_key = key[:-len(port_suffix)]
+                                rewritten_cookies.append(f"{base_key}={val}")
+                            elif "_" in key and key.split("_")[-1].isdigit():
+                                # Cookie for another port -> skip to avoid cross-site session leakage
+                                continue
+                            else:
+                                rewritten_cookies.append(f"{key}={val}")
+                    
+                    if rewritten_cookies:
+                        new_lines.append(f"Cookie: {'; '.join(rewritten_cookies)}".encode('utf-8'))
+                    continue
+
+                new_lines.append(line)
+                
+            # Add rewritten and new headers
+            new_lines.append(f"Host: {site_name}".encode('utf-8'))
+            new_lines.append(f"X-Frappe-Site-Name: {site_name}".encode('utf-8'))
+            new_lines.append(b"Connection: close")
+            
+            modified_headers = b"\r\n".join(new_lines) + b"\r\n\r\n"
 
             # Connect to Frappe backend
             try:
@@ -91,7 +153,47 @@ class SiteProxyManager:
                 backend_writer.write(body_part)
             await backend_writer.drain()
 
-            # Pipe bytes bi-directionally
+            # Read backend response headers to rewrite Set-Cookie headers with port suffix
+            resp_header_data = b""
+            while b"\r\n\r\n" not in resp_header_data:
+                try:
+                    chunk = await asyncio.wait_for(backend_reader.read(4096), timeout=2.0)
+                    if not chunk:
+                        break
+                    resp_header_data += chunk
+                except Exception:
+                    break
+
+            if resp_header_data and b"\r\n\r\n" in resp_header_data:
+                resp_parts = resp_header_data.split(b"\r\n\r\n", 1)
+                resp_headers_part = resp_parts[0]
+                resp_body_prefix = resp_parts[1] if len(resp_parts) > 1 else b""
+
+                resp_lines = resp_headers_part.split(b"\r\n")
+                new_resp_lines = []
+
+                for line in resp_lines:
+                    if not line:
+                        continue
+                    if line.lower().startswith(b"set-cookie:"):
+                        cookie_header = line[11:].decode('utf-8', errors='ignore').strip()
+                        # Rewrite keys (sid=, system_user=, user_id=, user_image=, full_name=) to sid_<port>=, etc.
+                        for cookie_name in ["sid", "system_user", "user_id", "user_image", "full_name"]:
+                            pattern = f"{cookie_name}="
+                            target = f"{cookie_name}{port_suffix}="
+                            if pattern in cookie_header and target not in cookie_header:
+                                cookie_header = cookie_header.replace(pattern, target, 1)
+                        new_resp_lines.append(f"Set-Cookie: {cookie_header}".encode('utf-8'))
+                    else:
+                        new_resp_lines.append(line)
+
+                modified_resp_headers = b"\r\n".join(new_resp_lines) + b"\r\n\r\n"
+                writer.write(modified_resp_headers)
+                if resp_body_prefix:
+                    writer.write(resp_body_prefix)
+                await writer.drain()
+
+            # Pipe remaining bytes bi-directionally
             async def pipe(r, w):
                 try:
                     while True:
@@ -109,11 +211,11 @@ class SiteProxyManager:
                     except Exception:
                         pass
 
-            await asyncio.gather(
-                pipe(reader, backend_writer),
-                pipe(backend_reader, writer),
-                return_exceptions=True
-            )
+            pipe1 = asyncio.create_task(pipe(reader, backend_writer))
+            pipe2 = asyncio.create_task(pipe(backend_reader, writer))
+            done, pending = await asyncio.wait([pipe1, pipe2], return_when=asyncio.FIRST_COMPLETED)
+            for p in pending:
+                p.cancel()
 
         except Exception as e:
             logger.error(f"Error in proxy connection on port {port}: {e}")
@@ -126,6 +228,7 @@ class SiteProxyManager:
 
     async def stop_proxy_for_site(self, port: int):
         async with self.lock:
+            self.targets.pop(port, None)
             server = self.servers.pop(port, None)
             if server:
                 server.close()
@@ -145,6 +248,7 @@ class SiteProxyManager:
                 server.close()
                 await server.wait_closed()
             self.servers.clear()
+            self.targets.clear()
 
             for port, task in list(self.tasks.items()):
                 task.cancel()

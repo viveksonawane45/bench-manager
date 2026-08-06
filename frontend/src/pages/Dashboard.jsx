@@ -1,22 +1,24 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { 
   Server, 
   Globe, 
   Cpu, 
   Database, 
   Zap, 
-  AlertTriangle, 
-  Play, 
   Square,
   HardDrive,
   Compass,
-  ArrowRight
+  ArrowRight,
+  ArrowUpRight,
+  Plus,
+  Play
 } from "lucide-react";
 import { API_HOST } from "../config";
 
 export default function Dashboard({ systemStats, benches, onRunTask, setActiveTab }) {
   const runningBenches = benches.filter(b => b.is_running);
   const stoppedBenches = benches.filter(b => !b.is_running);
+  const totalSitesCount = benches.reduce((acc, b) => acc + (b.sites?.length || 0), 0);
 
   const formatBytes = (bytes) => {
     if (!bytes) return "0 Bytes";
@@ -27,172 +29,239 @@ export default function Dashboard({ systemStats, benches, onRunTask, setActiveTa
     return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
   };
 
-  const getUsageColor = (pct) => {
-    if (pct > 85) return "text-danger bg-danger/10 border-danger/20";
-    if (pct > 65) return "text-warning bg-warning/10 border-warning/20";
-    return "text-success bg-success/10 border-success/20";
-  };
-
   const getProgressColor = (pct) => {
-    if (pct > 85) return "bg-danger";
-    if (pct > 65) return "bg-warning";
-    return "bg-darkAccent";
+    if (pct > 85) return "bg-rose-500";
+    if (pct > 65) return "bg-amber-500";
+    return "bg-slate-900 dark:bg-white";
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-300">
+    <div className="space-y-8 animate-in fade-in duration-300 pb-12">
       
-      {/* Metric Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        {/* Total Benches Card */}
-        <div className="glass-card p-6 rounded-2xl relative overflow-hidden flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs text-darkTextMuted font-medium uppercase tracking-wider">Total Benches</p>
-              <h3 className="text-3xl font-extrabold text-white mt-2 font-mono">{benches.length}</h3>
-            </div>
-            <div className="w-12 h-12 rounded-xl bg-darkAccent/10 border border-darkAccent/20 flex items-center justify-center">
-              <Server className="w-6 h-6 text-darkAccent" />
-            </div>
-          </div>
-          <div className="mt-4 pt-4 border-t border-darkBorder/40 flex items-center justify-between text-xs">
-            <span className="text-darkTextMuted">Active: <strong className="text-success">{runningBenches.length}</strong></span>
-            <span className="text-darkTextMuted">Stopped: <strong className="text-slate-400">{stoppedBenches.length}</strong></span>
+      {/* Hero Welcome Banner (Reference Image 2 Top Section Style) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center bg-white dark:bg-[#161722] p-8 sm:p-10 rounded-4xl border border-slate-900/10 dark:border-white/10 shadow-bento">
+        <div className="lg:col-span-7 space-y-5">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-slate-950 dark:text-white tracking-tight leading-[1.15]">
+            Manage And Control <br />
+            <span className="font-serif-italic font-normal text-slate-700 dark:text-slate-300">
+              Frappe Environments
+            </span> On One Platform!
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 max-w-xl leading-relaxed">
+            Operate multi-version Frappe benches, provision ERPNext sites, run real-time migrations, and monitor WSL system metrics with instantaneous control.
+          </p>
+
+          <div className="flex flex-wrap items-center gap-3 pt-2">
+            <button
+              onClick={() => setActiveTab("benches")}
+              className="pill-btn-coral text-xs"
+            >
+              <Plus className="w-4 h-4" />
+              Initialize Bench
+            </button>
+            
+            <button
+              onClick={() => setActiveTab("sites")}
+              className="pill-btn-black text-xs"
+            >
+              <Globe className="w-4 h-4" />
+              Provision Site
+            </button>
+
+            <button
+              onClick={() => setActiveTab("processes")}
+              className="pill-btn-outlined text-xs"
+            >
+              View Terminal Drawer
+            </button>
           </div>
         </div>
 
-        {/* Total Sites Card */}
-        <div className="glass-card p-6 rounded-2xl relative overflow-hidden flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs text-darkTextMuted font-medium uppercase tracking-wider">Active Sites</p>
-              <h3 className="text-3xl font-extrabold text-white mt-2 font-mono">
-                {benches.reduce((acc, b) => acc + (b.sites?.length || 0), 0)}
+        {/* Highlight Quick Card */}
+        <div className="lg:col-span-5 bento-card-dark relative overflow-hidden flex flex-col justify-between min-h-[220px]">
+          <div className="flex items-start justify-between">
+            <div className="space-y-1">
+              <span style={{ color: '#cbd5e1' }} className="text-[10px] font-mono font-semibold uppercase tracking-wider">Environment Status</span>
+              <h3 style={{ color: '#ffffff' }} className="text-2xl font-extrabold">
+                WSL <span style={{ color: '#e06d61' }} className="font-serif-italic font-normal">Ubuntu Stack</span>
               </h3>
             </div>
-            <div className="w-12 h-12 rounded-xl bg-success/10 border border-success/20 flex items-center justify-center">
-              <Globe className="w-6 h-6 text-success" />
+            <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center">
+              <ArrowUpRight className="w-5 h-5 text-white" />
             </div>
           </div>
-          <div className="mt-4 pt-4 border-t border-darkBorder/40 flex items-center justify-between text-xs">
-            <span className="text-darkTextMuted">Discovered from local paths</span>
-          </div>
-        </div>
 
-        {/* CPU Load Card */}
-        <div className="glass-card p-6 rounded-2xl relative overflow-hidden flex flex-col justify-between">
-          <div className="flex items-center justify-between">
+          <div className="grid grid-cols-2 gap-4 border-t border-white/15 pt-4 mt-6">
             <div>
-              <p className="text-xs text-darkTextMuted font-medium uppercase tracking-wider">WSL CPU load</p>
-              <h3 className="text-3xl font-extrabold text-white mt-2 font-mono">
-                {systemStats.cpu !== undefined ? `${systemStats.cpu}%` : "---"}
-              </h3>
+              <p style={{ color: '#cbd5e1' }} className="text-[10px] uppercase font-mono">Active Benches</p>
+              <p style={{ color: '#ffffff' }} className="text-2xl font-extrabold font-mono mt-0.5">{runningBenches.length} / {benches.length}</p>
             </div>
-            <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
-              <Cpu className="w-6 h-6 text-warning" />
-            </div>
-          </div>
-          <div className="mt-4 pt-4 border-t border-darkBorder/40 flex flex-col gap-2">
-            <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
-              <div 
-                className={`h-full transition-all duration-500 ${getProgressColor(systemStats.cpu)}`}
-                style={{ width: `${systemStats.cpu || 0}%` }}
-              ></div>
+            <div>
+              <p style={{ color: '#cbd5e1' }} className="text-[10px] uppercase font-mono">Hosted Sites</p>
+              <p style={{ color: '#34d399' }} className="text-2xl font-extrabold font-mono mt-0.5">{totalSitesCount}</p>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* RAM Usage Card */}
-        <div className="glass-card p-6 rounded-2xl relative overflow-hidden flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs text-darkTextMuted font-medium uppercase tracking-wider">WSL Memory</p>
-              <h3 className="text-3xl font-extrabold text-white mt-2 font-mono">
-                {systemStats.ram ? `${systemStats.ram.percent}%` : "---"}
-              </h3>
+      {/* Metric Stat Cards — compact KPI row matching other pages */}
+      <div>
+        <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-900/10 dark:border-white/10">
+          <h3 className="text-base font-extrabold text-slate-950 dark:text-white tracking-tight flex items-center gap-2">
+            <Compass className="w-5 h-5 text-coral" />
+            Workspace Overview
+          </h3>
+          <span className="text-xs font-mono font-bold bg-coral/10 text-coral px-2.5 py-1 rounded-full">
+            Live
+          </span>
+        </div>
+
+        <div className="kpi-row">
+          <div className="kpi-card flex-col justify-between">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="kpi-label">Total Benches</p>
+                <h3 className="kpi-value">{benches.length}</h3>
+              </div>
+              <div className="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
+                <Server className="w-6 h-6" />
+              </div>
             </div>
-            <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
-              <Database className="w-6 h-6 text-success" />
+            <div className="mt-4 pt-3 border-t border-slate-900/5 dark:border-white/5 flex items-center justify-between kpi-meta">
+              <span>Active: <strong className="text-emerald-600 dark:text-emerald-400 font-mono">{runningBenches.length}</strong></span>
+              <span>Stopped: <strong className="text-slate-400 font-mono">{stoppedBenches.length}</strong></span>
             </div>
           </div>
-          <div className="mt-4 pt-4 border-t border-darkBorder/40 flex flex-col gap-2">
-            <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
-              <div 
-                className={`h-full transition-all duration-500 ${getProgressColor(systemStats.ram?.percent)}`}
-                style={{ width: `${systemStats.ram?.percent || 0}%` }}
-              ></div>
+
+          <div className="kpi-card flex-col justify-between">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="kpi-label">Active Sites</p>
+                <h3 className="kpi-value">{totalSitesCount}</h3>
+              </div>
+              <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
+                <Globe className="w-6 h-6" />
+              </div>
             </div>
-            <div className="flex justify-between text-[10px] text-darkTextMuted font-mono">
-              <span>Used: {formatBytes(systemStats.ram?.used)}</span>
-              <span>Total: {formatBytes(systemStats.ram?.total)}</span>
+            <div className="mt-4 pt-3 border-t border-slate-900/5 dark:border-white/5 kpi-meta">
+              Discovered from local paths
+            </div>
+          </div>
+
+          <div className="kpi-card flex-col justify-between">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="kpi-label">WSL CPU Load</p>
+                <h3 className="kpi-value">
+                  {systemStats.cpu !== undefined ? `${systemStats.cpu}%` : "---"}
+                </h3>
+              </div>
+              <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0">
+                <Cpu className="w-6 h-6" />
+              </div>
+            </div>
+            <div className="mt-4 pt-3 border-t border-slate-900/5 dark:border-white/5">
+              <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden">
+                <div 
+                  className={`h-full transition-all duration-500 ${getProgressColor(systemStats.cpu)}`}
+                  style={{ width: `${systemStats.cpu || 0}%` }}
+                ></div>
+              </div>
+            </div>
+          </div>
+
+          <div className="kpi-card flex-col justify-between">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="kpi-label">WSL Memory</p>
+                <h3 className="kpi-value">
+                  {systemStats.ram ? `${systemStats.ram.percent}%` : "---"}
+                </h3>
+              </div>
+              <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
+                <Database className="w-6 h-6" />
+              </div>
+            </div>
+            <div className="mt-4 pt-3 border-t border-slate-900/5 dark:border-white/5 space-y-2">
+              <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden">
+                <div 
+                  className={`h-full transition-all duration-500 ${getProgressColor(systemStats.ram?.percent)}`}
+                  style={{ width: `${systemStats.ram?.percent || 0}%` }}
+                ></div>
+              </div>
+              <div className="flex justify-between kpi-meta font-mono">
+                <span>{formatBytes(systemStats.ram?.used)}</span>
+                <span>{formatBytes(systemStats.ram?.total)}</span>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
       {/* Services and Storage Row */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        {/* WSL Dependent Services Status */}
-        <div className="glass-card p-6 rounded-2xl col-span-2 flex flex-col justify-between">
+        {/* WSL Services Status */}
+        <div className="bento-card lg:col-span-2 flex flex-col justify-between">
           <div>
-            <h4 className="font-bold text-white text-sm tracking-tight mb-4 flex items-center gap-2">
-              <Zap className="w-4 h-4 text-warning" />
-              Frappe Service Stack (WSL)
+            <h4 className="font-extrabold text-slate-950 dark:text-white text-base tracking-tight mb-5 flex items-center gap-2">
+              <Zap className="w-5 h-5 text-amber-500" />
+              Frappe Service Stack <span className="font-serif-italic font-normal text-slate-600 dark:text-slate-400">(WSL Integration)</span>
             </h4>
-            <div className="space-y-4">
+
+            <div className="space-y-3">
               {/* MariaDB */}
-              <div className="flex items-center justify-between p-3 rounded-xl bg-slate-900/40 border border-darkBorder/30">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400 font-bold text-xs">
+              <div className="flex items-center justify-between p-4 rounded-3xl bg-slate-50 dark:bg-[#1e1f2e] border border-slate-900/5 dark:border-white/10">
+                <div className="flex items-center gap-3.5">
+                  <div className="w-9 h-9 rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold text-xs flex items-center justify-center font-mono">
                     DB
                   </div>
                   <div>
-                    <h5 className="text-xs font-semibold text-white">MariaDB Server</h5>
-                    <p className="text-[10px] text-darkTextMuted">Primary Database for Frappe Sites</p>
+                    <h5 className="text-xs font-extrabold text-slate-900 dark:text-white">MariaDB Server</h5>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">Primary Database for Frappe Sites</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className={`w-2.5 h-2.5 rounded-full ${systemStats.services?.mariadb === "active" ? "bg-success pulse-soft" : "bg-danger"}`} />
-                  <span className="text-[10px] uppercase font-bold font-mono tracking-wider text-slate-350">
+                <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-full">
+                  <span className={`w-2 h-2 rounded-full ${systemStats.services?.mariadb === "active" ? "bg-emerald-500 animate-pulse" : "bg-rose-500"}`} />
+                  <span className="text-[10px] uppercase font-bold font-mono tracking-wider text-emerald-700 dark:text-emerald-400">
                     {systemStats.services?.mariadb || "inactive"}
                   </span>
                 </div>
               </div>
 
-              {/* Redis-server */}
-              <div className="flex items-center justify-between p-3 rounded-xl bg-slate-900/40 border border-darkBorder/30">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center text-red-400 font-bold text-xs">
+              {/* Redis */}
+              <div className="flex items-center justify-between p-4 rounded-3xl bg-slate-50 dark:bg-[#1e1f2e] border border-slate-900/5 dark:border-white/10">
+                <div className="flex items-center gap-3.5">
+                  <div className="w-9 h-9 rounded-2xl bg-rose-500/10 text-rose-600 dark:text-rose-400 font-bold text-xs flex items-center justify-center font-mono">
                     RD
                   </div>
                   <div>
-                    <h5 className="text-xs font-semibold text-white">Redis Cache & Queue</h5>
-                    <p className="text-[10px] text-darkTextMuted">Caching, Sockets, and Task Queue</p>
+                    <h5 className="text-xs font-extrabold text-slate-900 dark:text-white">Redis Cache & Queue</h5>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">Caching, Sockets, and Task Queue</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className={`w-2.5 h-2.5 rounded-full ${systemStats.services?.redis === "active" ? "bg-success pulse-soft" : "bg-danger"}`} />
-                  <span className="text-[10px] uppercase font-bold font-mono tracking-wider text-slate-350">
+                <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-full">
+                  <span className={`w-2 h-2 rounded-full ${systemStats.services?.redis === "active" ? "bg-emerald-500 animate-pulse" : "bg-rose-500"}`} />
+                  <span className="text-[10px] uppercase font-bold font-mono tracking-wider text-emerald-700 dark:text-emerald-400">
                     {systemStats.services?.redis || "inactive"}
                   </span>
                 </div>
               </div>
 
               {/* Nginx */}
-              <div className="flex items-center justify-between p-3 rounded-xl bg-slate-900/40 border border-darkBorder/30">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-green-500/10 flex items-center justify-center text-green-400 font-bold text-xs">
+              <div className="flex items-center justify-between p-4 rounded-3xl bg-slate-50 dark:bg-[#1e1f2e] border border-slate-900/5 dark:border-white/10">
+                <div className="flex items-center gap-3.5">
+                  <div className="w-9 h-9 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold text-xs flex items-center justify-center font-mono">
                     NG
                   </div>
                   <div>
-                    <h5 className="text-xs font-semibold text-white">Nginx Web Server</h5>
-                    <p className="text-[10px] text-darkTextMuted">Reverse Proxy for Sites & Web Portals</p>
+                    <h5 className="text-xs font-extrabold text-slate-900 dark:text-white">Nginx Web Server</h5>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">Reverse Proxy for Sites & Web Portals</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className={`w-2.5 h-2.5 rounded-full ${systemStats.services?.nginx === "active" ? "bg-success pulse-soft" : "bg-danger"}`} />
-                  <span className="text-[10px] uppercase font-bold font-mono tracking-wider text-slate-350">
+                <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-full">
+                  <span className={`w-2 h-2 rounded-full ${systemStats.services?.nginx === "active" ? "bg-emerald-500 animate-pulse" : "bg-rose-500"}`} />
+                  <span className="text-[10px] uppercase font-bold font-mono tracking-wider text-emerald-700 dark:text-emerald-400">
                     {systemStats.services?.nginx || "inactive"}
                   </span>
                 </div>
@@ -201,27 +270,27 @@ export default function Dashboard({ systemStats, benches, onRunTask, setActiveTa
           </div>
         </div>
 
-        {/* Storage usage */}
-        <div className="glass-card p-6 rounded-2xl flex flex-col justify-between">
+        {/* Disk Storage Gauge */}
+        <div className="bento-card flex flex-col justify-between">
           <div>
-            <h4 className="font-bold text-white text-sm tracking-tight mb-4 flex items-center gap-2">
-              <HardDrive className="w-4 h-4 text-emerald-400" />
-              WSL Disk Storage
+            <h4 className="font-extrabold text-slate-950 dark:text-white text-base tracking-tight mb-4 flex items-center gap-2">
+              <HardDrive className="w-5 h-5 text-emerald-500" />
+              WSL Storage Gauge
             </h4>
+
             <div className="flex items-center justify-center py-4">
-              {/* Large responsive gauge */}
-              <div className="relative w-28 h-28 flex items-center justify-center">
+              <div className="relative w-32 h-32 flex items-center justify-center">
                 <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
                   <path
-                    className="text-slate-800"
-                    strokeWidth="3"
+                    className="text-slate-200 dark:text-slate-800"
+                    strokeWidth="3.5"
                     stroke="currentColor"
                     fill="none"
                     d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                   />
                   <path
-                    className="text-success transition-all duration-1000"
-                    strokeWidth="3"
+                    className="text-slate-950 dark:text-white transition-all duration-1000"
+                    strokeWidth="3.5"
                     strokeDasharray={`${systemStats.disk?.percent || 0}, 100`}
                     strokeLinecap="round"
                     stroke="currentColor"
@@ -230,123 +299,148 @@ export default function Dashboard({ systemStats, benches, onRunTask, setActiveTa
                   />
                 </svg>
                 <div className="absolute text-center">
-                  <p className="text-xl font-bold font-mono text-white">{systemStats.disk?.percent || 0}%</p>
-                  <p className="text-[8px] text-darkTextMuted font-semibold uppercase">Used</p>
+                  <p className="text-2xl font-extrabold font-mono text-slate-950 dark:text-white">{systemStats.disk?.percent || 0}%</p>
+                  <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Used</p>
                 </div>
               </div>
             </div>
           </div>
-          <div className="space-y-1.5 text-xs font-mono text-darkTextMuted border-t border-darkBorder/40 pt-4 mt-2">
+
+          <div className="space-y-2 text-xs font-mono text-slate-600 dark:text-slate-400 border-t border-slate-900/5 dark:border-white/5 pt-4 mt-2">
             <div className="flex justify-between">
               <span>Total Volume:</span>
-              <span className="text-white">{formatBytes(systemStats.disk?.total)}</span>
+              <span className="font-bold text-slate-900 dark:text-white">{formatBytes(systemStats.disk?.total)}</span>
             </div>
             <div className="flex justify-between">
               <span>Used Volume:</span>
-              <span className="text-white">{formatBytes(systemStats.disk?.used)}</span>
+              <span className="font-bold text-slate-900 dark:text-white">{formatBytes(systemStats.disk?.used)}</span>
             </div>
             <div className="flex justify-between">
               <span>Available space:</span>
-              <span className="text-white">{formatBytes(systemStats.disk?.free)}</span>
+              <span className="font-bold text-slate-900 dark:text-white">{formatBytes(systemStats.disk?.free)}</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Running benches & Quick access list */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* Feature Bento Cards (Style of Reference Image 2 - Taupe & Pitch-Black Cards) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        {/* Running benches */}
-        <div className="glass-card p-6 rounded-2xl md:col-span-2">
-          <h4 className="font-bold text-white text-sm tracking-tight mb-4 flex items-center gap-2">
-            <Server className="w-4 h-4 text-darkAccent" />
-            Active Processes ({runningBenches.length})
-          </h4>
-          {runningBenches.length > 0 ? (
-            <div className="divide-y divide-darkBorder/30">
-              {runningBenches.map((bench) => (
-                <div key={bench.path} className="py-3.5 flex items-center justify-between first:pt-0 last:pb-0">
-                  <div>
-                    <h5 className="text-sm font-semibold text-white">{bench.name}</h5>
-                    <p className="text-xs text-darkTextMuted font-mono mt-0.5">{bench.path}</p>
-                  </div>
-                  
-                  <div className="flex items-center gap-4">
-                    <span className="text-[11px] font-mono text-darkTextMuted bg-slate-800/60 border border-darkBorder/35 px-2 py-0.5 rounded">
-                      Sites: {bench.sites?.length || 0}
-                    </span>
-                    <button
-                      onClick={() => {
-                        onRunTask(
-                          fetch(`${API_HOST}/api/processes/stop`, {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ bench_path: bench.path })
-                          })
-                        );
-                      }}
-                      className="flex items-center gap-1.5 text-xs text-danger hover:bg-danger/10 border border-danger/10 hover:border-danger/25 px-2.5 py-1.5 rounded-lg transition-colors font-medium"
-                    >
-                      <Square className="w-3 h-3 fill-danger" />
-                      Stop Bench
-                    </button>
-                  </div>
-                </div>
-              ))}
+        {/* Taupe Card (Reference Image 2 Style) */}
+        <div className="lg:col-span-7 bento-card-taupe relative overflow-hidden flex flex-col justify-between min-h-[280px]">
+          <div className="flex items-start justify-between">
+            <button
+              onClick={() => setActiveTab("benches")}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/15 hover:bg-white/25 border border-white/20 text-white text-xs font-bold transition-colors"
+            >
+              Manage Benches
+              <ArrowUpRight className="w-4 h-4" />
+            </button>
+
+            <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
+              <ArrowUpRight className="w-5 h-5 text-white" />
             </div>
-          ) : (
-            <div className="text-center py-8 border border-dashed border-darkBorder/40 rounded-xl">
-              <p className="text-xs text-darkTextMuted">No benches are currently running</p>
-              <button
-                onClick={() => setActiveTab("benches")}
-                className="mt-3 text-xs text-darkAccent font-semibold hover:underline flex items-center gap-1 mx-auto"
-              >
-                Go to Benches <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          )}
+          </div>
+
+          <div className="mt-6 space-y-3">
+            <h3 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight leading-tight">
+              Active Processes <span className="font-serif-italic font-normal text-sky-200">And Running Benches</span> ({runningBenches.length})
+            </h3>
+            <p className="text-xs text-slate-200 font-medium max-w-lg leading-relaxed">
+              Monitored honcho & gunicorn background workers running across your local Frappe benches.
+            </p>
+
+            {runningBenches.length > 0 ? (
+              <div className="space-y-2 pt-1">
+                {runningBenches.map((bench) => (
+                  <div key={bench.path} className="bench-row p-3.5 rounded-2xl flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <h5 className="text-sm font-bold text-white">{bench.name}</h5>
+                      <p className="text-[11px] text-slate-200 font-mono mt-0.5 truncate">{bench.path}</p>
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0">
+                      <span className="text-[10px] font-mono font-bold bg-white/20 text-white px-2 py-0.5 rounded-full">
+                        Sites: {bench.sites?.length || 0}
+                      </span>
+                      <button
+                        onClick={() => {
+                          onRunTask(
+                            fetch(`${API_HOST}/api/processes/stop`, {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({ bench_path: bench.path })
+                            })
+                          );
+                        }}
+                        className="px-3 py-1 rounded-full bg-rose-500 text-white text-[10px] font-bold hover:bg-rose-600 transition-colors shadow-sm flex items-center gap-1"
+                      >
+                        <Square className="w-3 h-3 fill-current" />
+                        Stop Bench
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="p-4 rounded-2xl bg-white/10 border border-white/15 text-xs text-slate-200 font-medium italic text-center">
+                No benches currently active. Click "Manage Benches" to start a bench.
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Quick Launchpad */}
-        <div className="glass-card p-6 rounded-2xl flex flex-col justify-between">
-          <div>
-            <h4 className="font-bold text-white text-sm tracking-tight mb-4 flex items-center gap-2">
-              <Compass className="w-4 h-4 text-success" />
-              Command Launchpad
-            </h4>
-            <div className="space-y-2.5">
+        {/* Pitch Black Card (Reference Image 2 Style) */}
+        <div className="lg:col-span-5 bento-card-dark relative overflow-hidden flex flex-col justify-between min-h-[300px]">
+          <div className="flex items-start justify-between">
+            <span style={{ color: '#ffffff' }} className="px-3.5 py-1.5 rounded-full bg-white/10 text-xs font-bold border border-white/15">
+              Launchpad
+            </span>
+
+            <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
+              <ArrowUpRight className="w-5 h-5 text-white" />
+            </div>
+          </div>
+
+          <div className="mt-8 space-y-4">
+            <h3 style={{ color: '#ffffff' }} className="text-2xl sm:text-3xl font-extrabold tracking-tight leading-tight">
+              Fast-Track <span style={{ color: '#e06d61' }} className="font-serif-italic font-normal">Command Actions</span>
+            </h3>
+            <p style={{ color: '#cbd5e1' }} className="text-xs font-medium max-w-sm leading-relaxed">
+              Instant shortcuts to initialize benches, provision multi-tenant sites, and inspect background terminal outputs.
+            </p>
+
+            <div className="space-y-2 pt-2">
               <button
                 onClick={() => setActiveTab("benches")}
-                className="w-full flex items-center justify-between p-3 rounded-xl bg-slate-900/30 hover:bg-slate-800/40 border border-darkBorder/30 hover:border-darkAccent/30 text-xs font-semibold text-slate-200 transition-colors"
+                style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', color: '#ffffff' }}
+                className="w-full flex items-center justify-between p-3.5 rounded-2xl hover:bg-white/20 border border-white/20 text-xs font-bold transition-all group"
               >
-                Create New Bench
-                <ArrowRight className="w-4 h-4 text-darkTextMuted" />
+                <span style={{ color: '#ffffff' }} className="font-bold">Initialize New Bench</span>
+                <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-white group-hover:translate-x-1 transition-all" />
               </button>
+
               <button
                 onClick={() => setActiveTab("sites")}
-                className="w-full flex items-center justify-between p-3 rounded-xl bg-slate-900/30 hover:bg-slate-800/40 border border-darkBorder/30 hover:border-darkAccent/30 text-xs font-semibold text-slate-200 transition-colors"
+                style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', color: '#ffffff' }}
+                className="w-full flex items-center justify-between p-3.5 rounded-2xl hover:bg-white/20 border border-white/20 text-xs font-bold transition-all group"
               >
-                Provision New Site
-                <ArrowRight className="w-4 h-4 text-darkTextMuted" />
+                <span style={{ color: '#ffffff' }} className="font-bold">Provision Site & Domain</span>
+                <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-white group-hover:translate-x-1 transition-all" />
               </button>
+
               <button
                 onClick={() => setActiveTab("apps")}
-                className="w-full flex items-center justify-between p-3 rounded-xl bg-slate-900/30 hover:bg-slate-800/40 border border-darkBorder/30 hover:border-darkAccent/30 text-xs font-semibold text-slate-200 transition-colors"
+                style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', color: '#ffffff' }}
+                className="w-full flex items-center justify-between p-3.5 rounded-2xl hover:bg-white/20 border border-white/20 text-xs font-bold transition-all group"
               >
-                Download Frappe Apps
-                <ArrowRight className="w-4 h-4 text-darkTextMuted" />
-              </button>
-              <button
-                onClick={() => setActiveTab("processes")}
-                className="w-full flex items-center justify-between p-3 rounded-xl bg-slate-900/30 hover:bg-slate-800/40 border border-darkBorder/30 hover:border-darkAccent/30 text-xs font-semibold text-slate-200 transition-colors"
-              >
-                Check Process Terminal
-                <ArrowRight className="w-4 h-4 text-darkTextMuted" />
+                <span style={{ color: '#ffffff' }} className="font-bold">Browse Frappe Applications</span>
+                <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-white group-hover:translate-x-1 transition-all" />
               </button>
             </div>
           </div>
         </div>
       </div>
+
     </div>
   );
 }

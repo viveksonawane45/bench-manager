@@ -27,8 +27,8 @@ async def stop_bench(req: BenchStateRequest):
     Stops all processes running in the bench directory.
     """
     try:
-        stopped = BenchService.stop_bench(req.bench_path)
-        return {"status": "stopped" if stopped else "not_running"}
+        task_id = BenchService.stop_bench(req.bench_path)
+        return {"status": "stopped", "task_id": task_id}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

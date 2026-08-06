@@ -1,9 +1,11 @@
 import os
 import time
+import asyncio
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 from typing import Optional, List
 from services.bench_service import BenchService
+from services.proxy_service import proxy_manager
 
 router = APIRouter(prefix="/sites", tags=["Sites"])
 
@@ -12,6 +14,7 @@ class CreateSiteRequest(BaseModel):
     site_name: str
     admin_password: str
     mariadb_root_password: Optional[str] = ""
+    port: Optional[int] = None  # optional port for proxy
 
 class DropSiteRequest(BaseModel):
     bench_path: str
@@ -63,10 +66,16 @@ async def create_site(req: CreateSiteRequest):
     else:
         cmd_parts.append("--db-root-password 'root'") # fallback default root db pw if empty
 
-    cmd_parts.append("--no-mariadb-socket") # standard option to avoid socket issues if any
+    cmd_parts.append("--mariadb-user-host-login-scope='%'")
+    cmd_parts.append("--force")  # allow re-creating existing sites
     
     cmd = " ".join(cmd_parts)
     BenchService.run_async_command(task_id, cmd, req.bench_path)
+    
+    # If a specific port is requested, start the proxy for this site
+    if req.port:
+        # Start proxy in background; does not wait for bench command to finish
+        asyncio.create_task(proxy_manager.start_proxy_for_site(req.port, req.site_name))
     
     return {"status": "creating", "task_id": task_id}
 
@@ -89,12 +98,13 @@ async def drop_site(req: DropSiteRequest):
 async def install_app(req: InstallAppRequest):
     """
     Installs a frappe app to a site.
+    Uses --force to handle re-installation and partial install recovery.
     """
     if not os.path.exists(req.bench_path):
         raise HTTPException(status_code=404, detail="Bench path not found")
         
     task_id = f"site_install_app_{int(time.time())}"
-    cmd = f"export PATH=$PATH:/home/frappe/.local/bin; bench --site {req.site_name} install-app {req.app_name}"
+    cmd = f"export PATH=$PATH:/home/frappe/.local/bin; bench --site {req.site_name} install-app {req.app_name} --force"
     
     BenchService.run_async_command(task_id, cmd, req.bench_path)
     return {"status": "installing", "task_id": task_id}

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { API_HOST, BENCH_DEFAULT_PORT } from "../config";
 import { 
   Globe, 
@@ -12,20 +12,21 @@ import {
   Layers,
   Search,
   ExternalLink,
-  ChevronDown
 } from "lucide-react";
+import PillSelect from "../components/PillSelect";
 
 export default function SiteManager({ benches, onRunTask }) {
   const [selectedBenchPath, setSelectedBenchPath] = useState("");
   const [sites, setSites] = useState([]);
   const [apps, setApps] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Modals
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showInstallModal, setShowInstallModal] = useState(null); // site name
-  const [showBackupsModal, setShowBackupsModal] = useState(null); // site name
-  const [showDropConfirm, setShowDropConfirm] = useState(null); // site name
+  const [showInstallModal, setShowInstallModal] = useState(null);
+  const [showBackupsModal, setShowBackupsModal] = useState(null);
+  const [showDropConfirm, setShowDropConfirm] = useState(null);
 
   // Form Fields
   const [newSiteName, setNewSiteName] = useState("");
@@ -34,12 +35,17 @@ export default function SiteManager({ benches, onRunTask }) {
   const [selectedApp, setSelectedApp] = useState("");
   const [backups, setBackups] = useState([]);
 
-  // Sync bench selection
+  const sortedBenches = useMemo(
+    () => [...benches].sort((a, b) => (a.is_running === b.is_running ? a.name.localeCompare(b.name) : a.is_running ? -1 : 1)),
+    [benches]
+  );
+
+  // Sync bench selection — prefer active bench first
   useEffect(() => {
-    if (benches.length > 0 && !selectedBenchPath) {
-      setSelectedBenchPath(benches[0].path);
+    if (sortedBenches.length > 0 && !selectedBenchPath) {
+      setSelectedBenchPath(sortedBenches[0].path);
     }
-  }, [benches]);
+  }, [sortedBenches, selectedBenchPath]);
 
   // Fetch sites and apps when selected bench changes
   useEffect(() => {
@@ -81,7 +87,6 @@ export default function SiteManager({ benches, onRunTask }) {
       })
     );
 
-    // Reset and close
     setNewSiteName("");
     setAdminPassword("admin");
     setDbRootPassword("");
@@ -165,39 +170,93 @@ export default function SiteManager({ benches, onRunTask }) {
   };
 
   const selectedBench = benches.find(b => b.path === selectedBenchPath);
+  const filteredSites = sites.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
+    <div className="space-y-4 animate-in fade-in duration-300 pb-10">
       
-      {/* Bench Selector & Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <select
-              value={selectedBenchPath}
-              onChange={(e) => setSelectedBenchPath(e.target.value)}
-              className="appearance-none pl-4 pr-10 py-2.5 bg-slate-900 border border-darkBorder text-xs font-semibold text-white rounded-xl focus:outline-none focus:border-darkAccent cursor-pointer"
-            >
-              {benches.map((b) => (
-                <option key={b.path} value={b.path}>
-                  Bench: {b.name}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="w-4 h-4 text-darkTextMuted absolute right-3 top-3 pointer-events-none" />
+      {/* TOP: Compact KPI row */}
+      <div>
+        <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-900/10 dark:border-white/10">
+          <h3 className="text-sm font-extrabold text-slate-950 dark:text-white tracking-tight flex items-center gap-2">
+            <Globe className="w-4 h-4 text-coral" />
+            Site Telemetry
+          </h3>
+          <span className="text-[10px] font-mono font-bold bg-coral/10 text-coral px-2.5 py-0.5 rounded-full">
+            {sites.length} Sites
+          </span>
+        </div>
+
+        <div className="kpi-row kpi-row-3">
+          <div className="kpi-card items-center justify-between">
+            <div>
+              <p className="kpi-label">Total Sites in Bench</p>
+              <h3 className="kpi-value">{sites.length}</h3>
+            </div>
+            <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+              <Globe className="w-6 h-6" />
+            </div>
           </div>
-          
-          {selectedBench && (
-            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${selectedBench.is_running ? "bg-success/10 text-success" : "bg-slate-800 text-darkTextMuted"}`}>
-              {selectedBench.is_running ? "Active" : "Stopped"}
-            </span>
-          )}
+
+          <div className="kpi-card items-center justify-between">
+            <div>
+              <p className="kpi-label">Bench Status</p>
+              <h3 className="text-xl sm:text-2xl font-extrabold text-slate-950 dark:text-white mt-2">
+                {selectedBench?.is_running ? (
+                  <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" /> Active
+                  </span>
+                ) : (
+                  <span className="text-slate-400">Stopped</span>
+                )}
+              </h3>
+            </div>
+            <div className="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+              <Layers className="w-6 h-6" />
+            </div>
+          </div>
+
+          <div className="kpi-card items-center justify-between">
+            <div>
+              <p className="kpi-label">Database Engine</p>
+              <h3 className="text-xl sm:text-2xl font-extrabold text-slate-950 dark:text-white mt-2 font-mono">MariaDB :3306</h3>
+            </div>
+            <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+              <Database className="w-6 h-6" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* BOTTOM: Full-width content */}
+      <div className="space-y-6">
+
+      {/* Bench Selector & Actions Bar */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white dark:bg-[#161722] p-4 rounded-3xl border border-slate-900/10 dark:border-white/10 shadow-sm">
+        <div className="flex-1 flex flex-col sm:flex-row items-center gap-3">
+          <PillSelect
+            className="w-full sm:w-72"
+            prefix="Bench: "
+            value={selectedBenchPath}
+            onChange={setSelectedBenchPath}
+            options={sortedBenches.map((b) => ({ value: b.path, label: b.name }))}
+          />
+
+          <div className="relative w-full sm:w-64">
+            <input
+              type="text"
+              placeholder="Search domain name..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-4 pr-4 py-2 bg-slate-100 dark:bg-charcoal text-xs font-semibold text-slate-900 dark:text-white rounded-full border border-slate-900/10 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-coral"
+            />
+          </div>
         </div>
 
         {selectedBenchPath && (
           <button
             onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-2 px-3.5 py-2 bg-darkAccent text-white text-xs font-bold rounded-lg hover:bg-darkAccent/90 transition-colors shadow-lg shadow-darkAccent/20"
+            className="pill-btn-coral text-xs"
           >
             <Plus className="w-4 h-4" />
             Provision Site
@@ -205,100 +264,124 @@ export default function SiteManager({ benches, onRunTask }) {
         )}
       </div>
 
-      {/* Table view of sites */}
+      {/* Dense site list (stacked rows — no sparse table columns) */}
       {selectedBenchPath ? (
-        <div className="glass-panel rounded-2xl overflow-hidden">
+        <div className="bento-card-dense !p-0 overflow-hidden">
           {loading ? (
-            <div className="text-center py-16 text-darkTextMuted text-xs">
+            <div className="text-center py-12 text-xs font-bold text-slate-950 dark:text-white">
               Loading sites in {selectedBench?.name || "bench"}...
             </div>
-          ) : sites.length > 0 ? (
-            <table className="w-full border-collapse text-left text-xs">
-              <thead>
-                <tr className="border-b border-darkBorder/40 bg-slate-900/40 text-darkTextMuted font-bold tracking-wider uppercase text-[10px]">
-                  <th className="p-4">Site Domain / URL</th>
-                  <th className="p-4">External Portal</th>
-                  <th className="p-4">Database Port</th>
-                  <th className="p-4 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-darkBorder/30">
-                {sites.map((site) => (
-                  <tr key={site.name} className="hover:bg-slate-800/10 transition-colors">
-                    <td className="p-4 font-semibold text-white">
-                      <div className="flex items-center gap-2">
-                        <Globe className="w-4 h-4 text-darkAccent" />
-                        {site.name}
+          ) : filteredSites.length > 0 ? (
+            <div className="divide-y divide-slate-200 dark:divide-white/10">
+              <div className="px-4 py-2.5 bg-slate-50 dark:bg-charcoal/80 flex items-center justify-between gap-3">
+                <p className="text-[11px] font-extrabold uppercase tracking-wider text-slate-950 dark:text-white">
+                  Sites <span className="font-mono">({filteredSites.length})</span>
+                </p>
+                <p className="text-[11px] font-bold text-slate-950 dark:text-white font-mono">
+                  MariaDB :3306
+                </p>
+              </div>
+
+              {filteredSites.map((site) => {
+                const accessUrl = site.port ? `http://localhost:${site.port}` : null;
+                return (
+                <div
+                  key={site.name}
+                  className="px-3 py-2.5 grid grid-cols-1 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1.2fr)_auto] items-center gap-2 md:gap-3 hover:bg-slate-50/80 dark:hover:bg-white/[0.03] transition-colors"
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-success/10 border border-emerald-200 dark:border-success/20 text-emerald-600 dark:text-success flex items-center justify-center shrink-0">
+                      <Globe className="w-3.5 h-3.5" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <h4 className="text-sm font-extrabold text-slate-950 dark:text-white font-mono truncate">
+                          {site.name}
+                        </h4>
+                        {selectedBench?.is_running ? (
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-50 dark:bg-success/15 text-emerald-700 dark:text-success border border-emerald-200 dark:border-success/20">
+                            Live
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-white/10 text-slate-950 dark:text-white border border-slate-200 dark:border-white/10">
+                            Stopped
+                          </span>
+                        )}
                       </div>
-                    </td>
-                    <td className="p-4">
-                      {selectedBench?.is_running ? (
-                        <a
-                          href={`http://localhost:${site.port}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="flex items-center gap-1 text-darkAccent font-semibold hover:underline"
-                        >
-                          Visit App
-                          <ExternalLink className="w-3 h-3" />
-                        </a>
-                      ) : (
-                        <span className="text-[10px] text-darkTextMuted italic">Bench stopped</span>
-                      )}
-                    </td>
-                    <td className="p-4 font-mono text-darkTextMuted">3306</td>
-                    <td className="p-4 text-right">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <button
-                          onClick={() => setShowInstallModal(site.name)}
-                          className="flex items-center gap-1 bg-slate-900/60 hover:bg-slate-800 border border-darkBorder px-2.5 py-1.5 rounded-lg text-slate-200 hover:text-white transition-colors"
-                          title="Install App"
-                        >
-                          <Layers className="w-3.5 h-3.5 text-indigo-400" />
-                          Install App
-                        </button>
-                        <button
-                          onClick={() => handleBackupSite(site.name)}
-                          className="flex items-center gap-1 bg-slate-900/60 hover:bg-slate-800 border border-darkBorder px-2.5 py-1.5 rounded-lg text-slate-200 hover:text-white transition-colors"
-                          title="Backup database"
-                        >
-                          <Database className="w-3.5 h-3.5 text-success" />
-                          Backup
-                        </button>
-                        <button
-                          onClick={() => openBackups(site.name)}
-                          className="flex items-center gap-1 bg-slate-900/60 hover:bg-slate-800 border border-darkBorder px-2.5 py-1.5 rounded-lg text-slate-200 hover:text-white transition-colors"
-                          title="View Backups"
-                        >
-                          <Download className="w-3.5 h-3.5 text-yellow-400" />
-                          Backups
-                        </button>
-                        <button
-                          onClick={() => setShowDropConfirm(site.name)}
-                          className="p-1.5 rounded-lg hover:bg-danger/10 text-darkTextMuted hover:text-danger transition-colors"
-                          title="Drop Site"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    </div>
+                  </div>
+
+                  <div className="min-w-0 md:px-1">
+                    {selectedBench?.is_running && accessUrl ? (
+                      <a
+                        href={accessUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1.5 max-w-full text-[12px] font-bold font-mono text-blue-600 dark:text-blue-400 hover:underline"
+                        title={accessUrl}
+                      >
+                        <span className="truncate">{accessUrl}</span>
+                        <ExternalLink className="w-3 h-3 shrink-0" />
+                      </a>
+                    ) : (
+                      <p className="text-[11px] font-semibold text-slate-950 dark:text-white truncate">
+                        {site.port ? `http://localhost:${site.port} · start bench to open` : "No access URL"}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-1 flex-wrap md:justify-end shrink-0">
+                    <button
+                      onClick={() => setShowInstallModal(site.name)}
+                      className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-white dark:bg-[#161722] border border-slate-900/15 dark:border-white/15 text-[11px] font-bold text-slate-950 dark:text-white hover:border-indigo-400 hover:text-indigo-600 transition-colors"
+                      title="Install App"
+                    >
+                      <Layers className="w-3.5 h-3.5 text-indigo-500" />
+                      Install
+                    </button>
+                    <button
+                      onClick={() => handleBackupSite(site.name)}
+                      className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-white dark:bg-[#161722] border border-slate-900/15 dark:border-white/15 text-[11px] font-bold text-slate-950 dark:text-white hover:border-emerald-400 hover:text-emerald-600 transition-colors"
+                      title="Backup database"
+                    >
+                      <Database className="w-3.5 h-3.5 text-emerald-500" />
+                      Backup
+                    </button>
+                    <button
+                      onClick={() => openBackups(site.name)}
+                      className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-white dark:bg-[#161722] border border-slate-900/15 dark:border-white/15 text-[11px] font-bold text-slate-950 dark:text-white hover:border-amber-400 hover:text-amber-600 transition-colors"
+                      title="View Backups"
+                    >
+                      <Download className="w-3.5 h-3.5 text-amber-500" />
+                      Backups
+                    </button>
+                    <button
+                      onClick={() => setShowDropConfirm(site.name)}
+                      className="p-1 rounded-full border border-slate-900/10 dark:border-white/10 text-slate-950 dark:text-white hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 dark:hover:bg-danger/10 transition-colors"
+                      title="Drop Site"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+                );
+              })}
+            </div>
           ) : (
-            <div className="text-center py-16">
-              <Globe className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-              <h3 className="text-base font-bold text-white">No Sites Created</h3>
-              <p className="text-xs text-darkTextMuted mt-1 max-w-xs mx-auto">
-                There are no sites provisioned in this bench directory. Create a site to begin hosting Frappe portals.
+            <div className="text-center py-14 px-4">
+              <Globe className="w-10 h-10 text-slate-950 dark:text-white mx-auto mb-3 opacity-40" />
+              <h3 className="text-base font-extrabold text-slate-950 dark:text-white">No Sites Created</h3>
+              <p className="text-xs font-semibold text-slate-950 dark:text-white mt-1 max-w-xs mx-auto opacity-80">
+                There are no sites provisioned in this bench. Create a site to begin hosting Frappe portals.
               </p>
             </div>
           )}
         </div>
       ) : (
-        <div className="text-center py-16 border-2 border-dashed border-darkBorder/30 rounded-2xl">
-          <p className="text-xs text-darkTextMuted">Please initialize or scan a bench first to manage sites.</p>
+        <div className="text-center py-14 border-2 border-dashed border-slate-300 dark:border-white/15 rounded-2xl">
+          <p className="text-xs font-bold text-slate-950 dark:text-white">
+            Please initialize or scan a bench first to manage sites.
+          </p>
         </div>
       )}
 
@@ -528,6 +611,7 @@ export default function SiteManager({ benches, onRunTask }) {
         </div>
       )}
 
+      </div> {/* End full-width content */}
     </div>
   );
 }

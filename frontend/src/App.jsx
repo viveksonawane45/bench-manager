@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from "react";
-import Sidebar from "./components/Sidebar";
+import TopBar from "./components/TopBar";
 import { API_HOST } from "./config";
-import Navbar from "./components/Navbar";
 import Dashboard from "./pages/Dashboard";
 import BenchManager from "./pages/BenchManager";
 import SiteManager from "./pages/SiteManager";
 import AppManager from "./pages/AppManager";
 import ProcessManager from "./pages/ProcessManager";
-import SystemMonitor from "./pages/SystemMonitor";
+import Analytics from "./pages/Analytics";
 import TerminalDrawer from "./components/TerminalDrawer";
 import SetupWizard from "./pages/SetupWizard";
 import { ServerCrash, Loader2 } from "lucide-react";
@@ -146,24 +145,29 @@ export default function App() {
 
   // Function to execute an API and handle the task stream
   const handleRunTask = (apiPromise) => {
-    apiPromise
-      .then((res) => {
-        if (!res.ok) {
-          return res.json().then((err) => {
+    Promise.resolve(apiPromise)
+      .then(async (res) => {
+        if (!res) return;
+        if (res.task_id) {
+          setActiveTaskId(res.task_id);
+          fetchBenches();
+          return;
+        }
+        if (typeof res.json === "function") {
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({ detail: "Request failed" }));
             throw new Error(err.detail || "Request failed");
-          });
+          }
+          const data = await res.json();
+          if (data && data.task_id) {
+            setActiveTaskId(data.task_id);
+          }
+          fetchBenches();
         }
-        return res.json();
-      })
-      .then((data) => {
-        if (data && data.task_id) {
-          setActiveTaskId(data.task_id);
-        }
-        // Immediately fetch benches after initiating a task
-        fetchBenches();
       })
       .catch((err) => {
-        alert(`Task Error: ${err.message}`);
+        console.error("Task execution error:", err);
+        alert(`Task Error: ${err.message || err}`);
       });
   };
 
@@ -206,11 +210,11 @@ export default function App() {
             onRunTask={handleRunTask}
           />
         );
-      case "system":
+      case "analytics":
         return (
-          <SystemMonitor 
-            systemStats={systemStats} 
-            checkConnection={checkConnection}
+          <Analytics 
+            benches={benches}
+            systemStats={systemStats}
           />
         );
       default:
@@ -245,42 +249,36 @@ export default function App() {
   }
 
   return (
-    <div className="flex bg-darkBg text-darkText min-h-screen font-sans">
+    <div className="bg-darkBg text-darkText min-h-screen font-sans flex flex-col">
       
-      {/* Sidebar Navigation */}
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+      {/* Top Header Navigation Bar (Reference Image 3 Style) */}
+      <TopBar 
+        activeTab={activeTab} 
+        setActiveTab={setActiveTab} 
+        isBackendOnline={isBackendOnline} 
+        checkConnection={checkConnection} 
+        theme={theme}
+        setTheme={setTheme}
+      />
 
       {/* Main Body */}
-      <div className="flex-1 flex flex-col min-h-screen">
+      <main className="flex-1 px-3 sm:px-5 lg:px-6 py-5 sm:py-6 max-w-[1600px] mx-auto w-full">
         
-        {/* Top Header */}
-        <Navbar 
-          activeTab={activeTab} 
-          isBackendOnline={isBackendOnline} 
-          checkConnection={checkConnection} 
-          theme={theme}
-          setTheme={setTheme}
-        />
+        {/* Offline warning banner */}
+        {!isBackendOnline && (
+          <div className="mb-6 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs flex items-center gap-3 font-semibold pulse-soft">
+            <ServerCrash className="w-5 h-5 shrink-0" />
+            <span>
+              Backend offline. Run the FastAPI backend in WSL under the `frappe` user to enable bench operations: 
+              <code className="bg-slate-900 px-1.5 py-0.5 rounded ml-2 text-slate-200">
+                python3 -m uvicorn main:app --host 0.0.0.0 --port 8005
+              </code>
+            </span>
+          </div>
+        )}
 
-        {/* Content View */}
-        <main className="flex-1 p-8 overflow-y-auto max-w-6xl mx-auto w-full">
-          
-          {/* Offline warning banner */}
-          {!isBackendOnline && (
-            <div className="mb-6 p-4 rounded-xl bg-danger/10 border border-danger/25 text-danger text-xs flex items-center gap-3 font-semibold pulse-soft">
-              <ServerCrash className="w-5 h-5 shrink-0" />
-              <span>
-                Backend offline. Run the FastAPI backend in WSL under the `frappe` user to enable bench operations: 
-                <code className="bg-slate-900 px-1.5 py-0.5 rounded ml-2 text-slate-200">
-                  python3 -m uvicorn main:app --host 0.0.0.0 --port 8005
-                </code>
-              </span>
-            </div>
-          )}
-
-          {renderContent()}
-        </main>
-      </div>
+        {renderContent()}
+      </main>
 
       {/* Live Logs Console overlay */}
       {activeTaskId && (

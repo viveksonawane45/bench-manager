@@ -678,6 +678,7 @@ export default function SetupWizard({ onComplete, onSkip }) {
                         onChange={(e) => setBenchForm({ ...benchForm, version: e.target.value })}
                         className="p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs focus:border-blue-500 focus:outline-none text-slate-800 dark:text-slate-100"
                       >
+                        <option value="version-16">Version 16</option>
                         <option value="version-15">Version 15 (LTS)</option>
                         <option value="version-14">Version 14</option>
                         <option value="develop">Develop (Nightly)</option>
