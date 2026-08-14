@@ -25,6 +25,11 @@ class InstallAppRequest(BaseModel):
     site_name: str
     app_name: str
 
+class UninstallAppRequest(BaseModel):
+    bench_path: str
+    site_name: str
+    app_name: str
+
 class BackupSiteRequest(BaseModel):
     bench_path: str
     site_name: str
@@ -88,8 +93,10 @@ async def drop_site(req: DropSiteRequest):
         raise HTTPException(status_code=404, detail="Bench path not found")
         
     task_id = f"site_drop_{int(time.time())}"
-    # Force drop site
-    cmd = f"export PATH=$PATH:/home/frappe/.local/bin; bench drop-site {req.site_name} --force"
+    
+    pwd_flag = f"--root-password '{req.mariadb_root_password}'" if req.mariadb_root_password else "--root-password 'root'"
+    # Force drop site with non-interactive root password
+    cmd = f"export PATH=$PATH:/home/frappe/.local/bin; bench drop-site {req.site_name} --force {pwd_flag}"
     
     BenchService.run_async_command(task_id, cmd, req.bench_path)
     return {"status": "dropping", "task_id": task_id}
@@ -106,8 +113,35 @@ async def install_app(req: InstallAppRequest):
     task_id = f"site_install_app_{int(time.time())}"
     cmd = f"export PATH=$PATH:/home/frappe/.local/bin; bench --site {req.site_name} install-app {req.app_name} --force"
     
-    BenchService.run_async_command(task_id, cmd, req.bench_path)
+    BenchService.clear_site_apps_cache(req.bench_path, req.site_name)
+    BenchService.run_async_command(
+        task_id,
+        cmd,
+        req.bench_path,
+        on_success=lambda: BenchService.clear_site_apps_cache(req.bench_path, req.site_name)
+    )
     return {"status": "installing", "task_id": task_id}
+
+@router.post("/uninstall-app")
+async def uninstall_app(req: UninstallAppRequest):
+    """
+    Uninstalls a frappe app from a site.
+    Uses --yes to bypass confirmation prompt.
+    """
+    if not os.path.exists(req.bench_path):
+        raise HTTPException(status_code=404, detail="Bench path not found")
+        
+    task_id = f"site_uninstall_app_{int(time.time())}"
+    cmd = f"export PATH=$PATH:/home/frappe/.local/bin; bench --site {req.site_name} uninstall-app {req.app_name} --yes"
+    
+    BenchService.clear_site_apps_cache(req.bench_path, req.site_name)
+    BenchService.run_async_command(
+        task_id,
+        cmd,
+        req.bench_path,
+        on_success=lambda: BenchService.clear_site_apps_cache(req.bench_path, req.site_name)
+    )
+    return {"status": "uninstalling", "task_id": task_id}
 
 @router.post("/backup")
 async def backup_site(req: BackupSiteRequest):

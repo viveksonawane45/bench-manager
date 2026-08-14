@@ -312,6 +312,15 @@ class BenchService:
         return sites
 
     @staticmethod
+    def clear_site_apps_cache(bench_path: str, site_name: str):
+        """
+        Clears cached installed apps list for a specific site.
+        """
+        cache_key = f"{bench_path}::{site_name}"
+        if hasattr(BenchService, "_site_apps_cache") and cache_key in BenchService._site_apps_cache:
+            del BenchService._site_apps_cache[cache_key]
+
+    @staticmethod
     def get_site_installed_apps(bench_path: str, site_name: str) -> List[Dict[str, str]]:
         """
         Resolve apps installed on a specific site via MariaDB (fast).

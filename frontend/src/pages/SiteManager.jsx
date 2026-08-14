@@ -25,8 +25,10 @@ export default function SiteManager({ benches, onRunTask }) {
   // Modals
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showInstallModal, setShowInstallModal] = useState(null);
+  const [showManageAppsModal, setShowManageAppsModal] = useState(null);
   const [showBackupsModal, setShowBackupsModal] = useState(null);
   const [showDropConfirm, setShowDropConfirm] = useState(null);
+  const [showUninstallConfirm, setShowUninstallConfirm] = useState(null);
 
   // Form Fields
   const [newSiteName, setNewSiteName] = useState("");
@@ -100,7 +102,8 @@ export default function SiteManager({ benches, onRunTask }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           bench_path: selectedBenchPath,
-          site_name: siteName
+          site_name: siteName,
+          mariadb_root_password: dbRootPassword || "root"
         })
       })
     );
@@ -122,7 +125,26 @@ export default function SiteManager({ benches, onRunTask }) {
       })
     );
     setShowInstallModal(null);
+    setShowManageAppsModal(null);
     setSelectedApp("");
+  };
+
+  const handleUninstallApp = (siteName, appName) => {
+    if (!siteName || !appName) return;
+
+    onRunTask(
+      fetch(`${API_HOST}/api/sites/uninstall-app`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          bench_path: selectedBenchPath,
+          site_name: siteName,
+          app_name: appName
+        })
+      })
+    );
+    setShowUninstallConfirm(null);
+    setShowManageAppsModal(null);
   };
 
   const handleBackupSite = (siteName) => {
@@ -308,6 +330,24 @@ export default function SiteManager({ benches, onRunTask }) {
                           </span>
                         )}
                       </div>
+                      {site.installed_apps && site.installed_apps.length > 0 && (
+                        <div className="flex items-center gap-1 flex-wrap mt-1">
+                          {site.installed_apps.map((app) => (
+                            <span
+                              key={app.name}
+                              className={`text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full border ${
+                                app.name === "frappe"
+                                  ? "bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-white/10"
+                                  : app.name === "erpnext"
+                                  ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20"
+                                  : "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border-indigo-200 dark:border-indigo-500/20"
+                              }`}
+                            >
+                              {app.name}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -332,12 +372,12 @@ export default function SiteManager({ benches, onRunTask }) {
 
                   <div className="flex items-center gap-1 flex-wrap md:justify-end shrink-0">
                     <button
-                      onClick={() => setShowInstallModal(site.name)}
-                      className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-white dark:bg-[#161722] border border-slate-900/15 dark:border-white/15 text-[11px] font-bold text-slate-950 dark:text-white hover:border-indigo-400 hover:text-indigo-600 transition-colors"
-                      title="Install App"
+                      onClick={() => setShowManageAppsModal(site)}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white dark:bg-[#161722] border border-slate-900/15 dark:border-white/15 text-[11px] font-bold text-slate-950 dark:text-white hover:border-indigo-400 hover:text-indigo-600 transition-colors"
+                      title="Manage Site Apps (Install & Delete)"
                     >
                       <Layers className="w-3.5 h-3.5 text-indigo-500" />
-                      Install
+                      Manage Apps
                     </button>
                     <button
                       onClick={() => handleBackupSite(site.name)}
@@ -570,6 +610,151 @@ export default function SiteManager({ benches, onRunTask }) {
                   No database backup logs found. Run Backup above to generate one.
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Manage Site Apps Modal (Installed Apps + Install New App) */}
+      {showManageAppsModal && (
+        <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl shadow-2xl p-6 animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between mb-4 text-xs">
+              <h3 className="font-extrabold text-slate-900 dark:text-white text-base flex items-center gap-2">
+                <Layers className="w-5 h-5 text-indigo-500 dark:text-indigo-400" />
+                Manage Apps for: <span className="font-mono text-coral">{showManageAppsModal.name}</span>
+              </h3>
+              <button
+                onClick={() => {
+                  setShowManageAppsModal(null);
+                  setSelectedApp("");
+                }}
+                className="p-1.5 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-5 text-xs">
+              {/* Section 1: Installed Apps */}
+              <div>
+                <h4 className="font-extrabold text-[11px] text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2">
+                  Installed Apps on Site ({showManageAppsModal.installed_apps?.length || 0})
+                </h4>
+                <div className="max-h-[220px] overflow-y-auto divide-y divide-slate-200 dark:divide-white/10 border border-slate-200 dark:border-white/10 rounded-2xl overflow-hidden bg-slate-50 dark:bg-slate-950/80">
+                  {showManageAppsModal.installed_apps && showManageAppsModal.installed_apps.length > 0 ? (
+                    showManageAppsModal.installed_apps.map((app) => (
+                      <div key={app.name} className="p-3 flex items-center justify-between gap-2 hover:bg-slate-100/70 dark:hover:bg-slate-900/50 transition-colors">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="font-mono font-extrabold text-slate-900 dark:text-white text-xs truncate">{app.name}</span>
+                          <span className="text-[10px] font-mono font-semibold text-slate-600 dark:text-slate-400 bg-slate-200/80 dark:bg-slate-800 px-2 py-0.5 rounded-full shrink-0">
+                            v{app.version || "Unknown"}
+                          </span>
+                        </div>
+                        {app.name !== "frappe" ? (
+                          <button
+                            onClick={() => setShowUninstallConfirm({ siteName: showManageAppsModal.name, appName: app.name })}
+                            className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-600 dark:hover:bg-rose-600 text-rose-600 dark:text-rose-400 hover:text-white dark:hover:text-white border border-rose-200 dark:border-rose-500/20 transition-all font-bold text-[11px] shrink-0 shadow-sm"
+                            title={`Uninstall ${app.name} from ${showManageAppsModal.name}`}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            Uninstall
+                          </button>
+                        ) : (
+                          <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 bg-slate-200/80 dark:bg-slate-800 px-2.5 py-0.5 rounded-full shrink-0">
+                            Core Framework
+                          </span>
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-4 text-center text-slate-500 dark:text-slate-400 text-xs">
+                      No per-site installed apps detected.
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Section 2: Install New App */}
+              <div className="pt-3 border-t border-slate-200 dark:border-white/10 space-y-3">
+                <h4 className="font-extrabold text-[11px] text-slate-600 dark:text-slate-300 uppercase tracking-wider">
+                  Install New App on Site
+                </h4>
+                <div>
+                  {apps.length > 0 ? (
+                    <select
+                      value={selectedApp}
+                      onChange={(e) => setSelectedApp(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-white/10 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white font-medium focus:border-coral focus:outline-none"
+                    >
+                      <option value="">-- Choose an App from Bench --</option>
+                      {apps.map((app) => (
+                        <option key={app.name} value={app.name}>
+                          {app.name} (v{app.version})
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <p className="text-danger font-medium">No apps downloaded in this bench. Go to Apps to clone apps.</p>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-end gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowManageAppsModal(null);
+                      setSelectedApp("");
+                    }}
+                    className="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-white font-semibold rounded-full transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => handleInstallApp(showManageAppsModal.name)}
+                    disabled={!selectedApp}
+                    className="px-4 py-2 pill-btn-coral text-xs disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
+                  >
+                    Install Selected App
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Uninstall App Confirmation Modal */}
+      {showUninstallConfirm && (
+        <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="w-full max-w-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl shadow-2xl p-6 animate-in zoom-in-95 duration-200">
+            <div className="flex items-start gap-3.5 mb-4 text-xs">
+              <div className="w-10 h-10 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-500 shrink-0">
+                <ShieldAlert className="w-5.5 h-5.5" />
+              </div>
+              <div>
+                <h3 className="font-extrabold text-slate-900 dark:text-white text-sm">Uninstall App from Site?</h3>
+                <p className="text-slate-600 dark:text-slate-300 mt-1 leading-normal">
+                  Are you sure you want to uninstall <strong className="text-slate-900 dark:text-white font-mono">"{showUninstallConfirm.appName}"</strong> from site <strong className="text-slate-900 dark:text-white font-mono">"{showUninstallConfirm.siteName}"</strong>? This will drop all app tables and remove custom fields for this site.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200 dark:border-white/10 text-xs">
+              <button
+                type="button"
+                onClick={() => setShowUninstallConfirm(null)}
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-white font-semibold rounded-full transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => handleUninstallApp(showUninstallConfirm.siteName, showUninstallConfirm.appName)}
+                className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-full transition-colors shadow-md"
+              >
+                Yes, Uninstall App
+              </button>
             </div>
           </div>
         </div>
