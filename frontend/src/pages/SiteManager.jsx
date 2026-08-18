@@ -103,7 +103,7 @@ export default function SiteManager({ benches, onRunTask }) {
         body: JSON.stringify({
           bench_path: selectedBenchPath,
           site_name: siteName,
-          mariadb_root_password: dbRootPassword || "root"
+          mariadb_root_password: dbRootPassword
         })
       })
     );
@@ -473,7 +473,7 @@ export default function SiteManager({ benches, onRunTask }) {
                 <label className="block font-semibold text-slate-300 mb-1.5">MariaDB Root Password (Optional)</label>
                 <input
                   type="password"
-                  placeholder="Defaults to 'root'"
+                  placeholder="Auto-detected (e.g. 'frappe' / 'root')"
                   value={dbRootPassword}
                   onChange={(e) => setDbRootPassword(e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-lg border border-darkBorder bg-slate-950 text-white font-medium focus:border-darkAccent focus:outline-none"

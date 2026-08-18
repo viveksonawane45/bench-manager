@@ -285,13 +285,11 @@ class BenchService:
         except Exception as e:
             print(f"Error starting proxies in get_sites: {e}")
 
-        # Bench apps once (also used as fallback when per-site detection fails)
+        # Bench apps once (used to get frappe version fallback)
         bench_apps = BenchService.get_apps(bench_path)
-        bench_app_fallback = [
-            {"name": a["name"], "version": a.get("version") or "Unknown", "inferred": True}
-            for a in bench_apps
-            if a.get("name")
-        ]
+        frappe_info = next((a for a in bench_apps if a.get("name") == "frappe"), None)
+        frappe_ver = (frappe_info.get("version") if frappe_info else "Unknown") or "Unknown"
+        frappe_core_fallback = [{"name": "frappe", "version": frappe_ver, "inferred": False}]
 
         # Return list of dictionaries (with per-site installed apps when readable)
         for name in site_names:
@@ -300,7 +298,7 @@ class BenchService:
                 for app in installed:
                     app["inferred"] = False
             else:
-                installed = [dict(a) for a in bench_app_fallback]
+                installed = [dict(a) for a in frappe_core_fallback]
 
             sites.append({
                 "name": name,
@@ -674,6 +672,25 @@ class BenchService:
         return False
 
     @staticmethod
+    def get_mariadb_root_password(provided_password: Optional[str] = None) -> str:
+        """
+        Auto-detects working MariaDB root password from common defaults if none is provided.
+        """
+        if provided_password and provided_password.strip():
+            return provided_password.strip()
+
+        # Test candidate passwords in priority order
+        for pwd in ["frappe", "root", ""]:
+            try:
+                cmd = ["mariadb", "-u", "root", f"-p{pwd}", "-e", "SELECT 1;"] if pwd else ["mariadb", "-u", "root", "-e", "SELECT 1;"]
+                res = subprocess.run(cmd, capture_output=True, timeout=2)
+                if res.returncode == 0:
+                    return pwd
+            except Exception:
+                pass
+        return "frappe"
+
+    @staticmethod
     def run_async_command(task_id: str, command: str, cwd: str, on_success = None):
         """
         Runs a command in a shell environment asynchronously, saving output to process registry.
@@ -681,9 +698,9 @@ class BenchService:
         """
         # Ensure PATH includes frappe local bin and current bench env/bin
         env_bin = os.path.join(cwd, "env", "bin")
-        path_prefix = f'export PATH="/home/frappe/.local/bin:{env_bin}:$PATH"; '
+        path_prefix = f'export PYTHONUNBUFFERED=1; export PATH="/home/frappe/.local/bin:{env_bin}:$PATH"; '
         
-        full_command = command if command.startswith("export PATH=") else path_prefix + command
+        full_command = command if command.startswith("export PATH=") or command.startswith("export PYTHONUNBUFFERED=") else path_prefix + command
 
         def thread_target():
             try:
@@ -691,6 +708,7 @@ class BenchService:
                     full_command,
                     shell=True,
                     cwd=cwd,
+                    stdin=subprocess.DEVNULL,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.STDOUT,
                     text=True,

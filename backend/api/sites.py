@@ -19,6 +19,7 @@ class CreateSiteRequest(BaseModel):
 class DropSiteRequest(BaseModel):
     bench_path: str
     site_name: str
+    mariadb_root_password: Optional[str] = ""
 
 class InstallAppRequest(BaseModel):
     bench_path: str
@@ -58,21 +59,19 @@ async def create_site(req: CreateSiteRequest):
 
     task_id = f"site_create_{int(time.time())}"
     
+    root_pw = BenchService.get_mariadb_root_password(req.mariadb_root_password)
+    
     # Construct CLI command
     cmd_parts = [
-        "export PATH=$PATH:/home/frappe/.local/bin",
-        ";",
         "bench new-site",
         req.site_name,
         f"--admin-password '{req.admin_password}'",
+        "--db-root-username root",
+        f"--db-root-password '{root_pw}'",
+        "--mariadb-user-host-login-scope='%'",
+        "--verbose",
+        "--force"
     ]
-    if req.mariadb_root_password:
-        cmd_parts.append(f"--db-root-password '{req.mariadb_root_password}'")
-    else:
-        cmd_parts.append("--db-root-password 'root'") # fallback default root db pw if empty
-
-    cmd_parts.append("--mariadb-user-host-login-scope='%'")
-    cmd_parts.append("--force")  # allow re-creating existing sites
     
     cmd = " ".join(cmd_parts)
     BenchService.run_async_command(task_id, cmd, req.bench_path)
@@ -94,9 +93,9 @@ async def drop_site(req: DropSiteRequest):
         
     task_id = f"site_drop_{int(time.time())}"
     
-    pwd_flag = f"--root-password '{req.mariadb_root_password}'" if req.mariadb_root_password else "--root-password 'root'"
-    # Force drop site with non-interactive root password
-    cmd = f"export PATH=$PATH:/home/frappe/.local/bin; bench drop-site {req.site_name} --force {pwd_flag}"
+    root_pw = BenchService.get_mariadb_root_password(req.mariadb_root_password)
+    # Force drop site with non-interactive root password and bypass backup
+    cmd = f"bench drop-site {req.site_name} --force --root-password '{root_pw}' --no-backup"
     
     BenchService.run_async_command(task_id, cmd, req.bench_path)
     return {"status": "dropping", "task_id": task_id}
